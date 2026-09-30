@@ -14,6 +14,11 @@ export default function WorkoutPage() {
   const params = useParams();
   const planWeek = Number(params.planWeek);
   const dayNo = Number(params.dayNo);
+  // 요일이 바뀌면 화면을 새로 만든다. 앞 요일의 기록이 잠깐 남아 보이는 일을 막는다.
+  return <WorkoutView key={`${planWeek}-${dayNo}`} planWeek={planWeek} dayNo={dayNo} />;
+}
+
+function WorkoutView({ planWeek, dayNo }: { planWeek: number; dayNo: number }) {
   const active = useActive();
   const plan = active?.plan;
   const data = useLiveQuery(async () => {
