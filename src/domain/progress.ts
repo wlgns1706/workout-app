@@ -145,3 +145,18 @@ export function parseOptions(text: string | null): string[] {
     .map((part) => part.replace(/\n\s*\n/g, '\n').trim())
     .filter((part) => part !== '');
 }
+
+interface FillSide {
+  repsText: string | null;
+  weight: number | null;
+  reps: number | null;
+}
+
+/** 방금 체크한 세트의 값을 다음 세트에 채울 내용. 반복 처방이 같은 세트의 빈 칸에만 채운다. */
+export function autofillPatch(done: FillSide, next: FillSide): { weight?: number; reps?: number } | null {
+  if (done.repsText !== next.repsText) return null;
+  const patch: { weight?: number; reps?: number } = {};
+  if (next.weight == null && done.weight != null) patch.weight = done.weight;
+  if (next.reps == null && done.reps != null) patch.reps = done.reps;
+  return Object.keys(patch).length > 0 ? patch : null;
+}

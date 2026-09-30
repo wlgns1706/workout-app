@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import {
+  autofillPatch,
   dayLogId,
   dayStatus,
   exerciseDone,
@@ -165,5 +166,22 @@ describe('newSetLog', () => {
       done: false,
       performedDayNo: null,
     });
+  });
+});
+
+describe('autofillPatch', () => {
+  const done = { repsText: '8~12', weight: 60, reps: 10 };
+  test('반복 처방이 같은 다음 세트의 빈 칸에 무게와 횟수를 채운다', () => {
+    expect(autofillPatch(done, { repsText: '8~12', weight: null, reps: null })).toEqual({ weight: 60, reps: 10 });
+  });
+  test('이미 값이 있는 칸은 건드리지 않는다', () => {
+    expect(autofillPatch(done, { repsText: '8~12', weight: 55, reps: null })).toEqual({ reps: 10 });
+    expect(autofillPatch(done, { repsText: '8~12', weight: 55, reps: 9 })).toBeNull();
+  });
+  test('반복 처방이 다른 세트에는 채우지 않는다 (3~6회 무게를 8~12회 세트에 넣지 않는다)', () => {
+    expect(autofillPatch({ repsText: '3~6', weight: 70, reps: 5 }, { repsText: '8~12', weight: null, reps: null })).toBeNull();
+  });
+  test('방금 세트의 무게가 없으면 횟수만 채운다', () => {
+    expect(autofillPatch({ repsText: '10~20', weight: null, reps: 12 }, { repsText: '10~20', weight: null, reps: null })).toEqual({ reps: 12 });
   });
 });

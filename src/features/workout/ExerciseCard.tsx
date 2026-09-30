@@ -2,8 +2,8 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { db } from '../../db/db';
 import { defaultSetting, deleteSetLog, exerciseHistory, patchSetting, saveSetLog } from '../../db/repo';
-import { formatSet, lastSession, type DayKey, type Prefill } from '../../domain/e1rm';
-import { exerciseDone, newSetLog, slotsForExercise } from '../../domain/progress';
+import { formatSet, isPR, lastSession, prefill, type DayKey, type Prefill } from '../../domain/e1rm';
+import { autofillPatch, exerciseDone, newSetLog, slotsForExercise } from '../../domain/progress';
 import { defaultReps } from '../../domain/reps';
 import type { Plan, Program, ProgramExercise, SetLog, Unit } from '../../domain/types';
 import { fromKg, roundTo, toKg } from '../../domain/units';
@@ -63,8 +63,13 @@ export function ExerciseCard(props: Props) {
   const finished = exerciseDone(plan.id, planWeek, dayNo, exercise, exerciseIndex, props.logs);
   const unitLabel = (u: Unit) => (u === 'lb' ? 'lbs' : 'kg');
 
-  // Task 14에서 추천 무게 계산으로 바꾼다.
-  const suggestFor = (_item: Item): Prefill | null => null;
+  // 같은 종목에서 이미 체크한 세트가 있으면 "다음 세트 자동 채우기"가 맡는다.
+  const doneReps = new Set(items.filter((i) => i.log?.done && i.log.type !== 'warmup').map((i) => i.repsText));
+  const anyDoneToday = doneReps.size > 0;
+  const suggestFor = (item: Item): Prefill | null =>
+    item.repsText == null || doneReps.has(item.repsText)
+      ? null
+      : prefill(props.program.rpeChart, history, current, item.repsText, item.rpe, item.log?.unit ?? setting.unit);
 
   async function write(item: Item, patch: Partial<SetLog>) {
     const base =
@@ -82,13 +87,9 @@ export function ExerciseCard(props: Props) {
     await write(item, { weight, reps, done: true, doneAt: new Date().toISOString(), performedDayNo: props.performedDayNo });
     timer.start(setting.restSeconds);
     props.onChecked();
-    const next = items.slice(items.indexOf(item) + 1).find((i) => !i.log?.done);
-    if (next) {
-      const patch: Partial<SetLog> = {};
-      if (next.log?.weight == null && weight != null) patch.weight = weight;
-      if (next.log?.reps == null && reps != null && next.repsText === item.repsText) patch.reps = reps;
-      if (Object.keys(patch).length > 0) await write(next, patch);
-    }
+    const next = items.slice(items.indexOf(item) + 1).find((i) => !i.log?.done && i.repsText === item.repsText);
+    const patch = next && autofillPatch({ repsText: item.repsText, weight, reps }, { repsText: next.repsText, weight: next.log?.weight ?? null, reps: next.log?.reps ?? null });
+    if (next && patch) await write(next, patch);
   }
 
   async function addSet() {
@@ -110,7 +111,10 @@ export function ExerciseCard(props: Props) {
     return (
       <div className="card">
         <button type="button" className="row between" style={{ width: '100%', background: 'none', border: 0, padding: 0, textAlign: 'left' }} onClick={() => setOpen(true)}>
-          <strong>✓ {exercise.name}</strong>
+          <strong>
+            ✓ {exercise.name}
+            {mine.some((l) => isPR(props.program.rpeChart, l, history)) && <> <span className="chip pr">PR</span></>}
+          </strong>
           <span className="muted">{mine.filter((l) => l.done && l.type !== 'warmup').map(formatSet).join(', ')}</span>
         </button>
       </div>
@@ -144,6 +148,9 @@ export function ExerciseCard(props: Props) {
         onBlur={(e) => e.target.value !== setting.note && patchSetting(db, exercise.name, { note: e.target.value })}
       />
       {last && <p className="muted">지난번({last.date.slice(5)}) {last.sets.map(formatSet).join(', ')}</p>}
+      {!anyDoneToday && items.some((i) => i.repsText != null && suggestFor(i)?.source === 'recommended') && (
+        <p className="muted">흐린 숫자는 지난 기록으로 계산한 추천 무게입니다.</p>
+      )}
 
       {items.map((item) => {
         const type = item.log?.type ?? 'work';
@@ -159,7 +166,7 @@ export function ExerciseCard(props: Props) {
             unit={unit}
             suggestedWeight={suggestion?.weight ?? null}
             suggestedReps={item.repsText == null ? null : defaultReps(item.repsText)}
-            pr={false}
+            pr={item.log != null && isPR(props.program.rpeChart, item.log, history)}
             removable={item.rowIndex === null}
             onChange={(patch) => write(item, patch)}
             onToggle={(weight, reps) => toggle(item, weight, reps)}
