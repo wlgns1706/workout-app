@@ -8,6 +8,7 @@ import { useWakeLock } from '../../ui/useWakeLock';
 import { useActive } from '../useActive';
 import { DayFooter, markStarted, type DayViewProps } from './dayShared';
 import { ExerciseCard } from './ExerciseCard';
+import { OptionalDay } from './OptionalDay';
 
 export default function WorkoutPage() {
   const params = useParams();
@@ -48,7 +49,7 @@ export default function WorkoutPage() {
       {week.rest ? (
         <p className="muted">이번 주는 완전 휴식입니다.</p>
       ) : day.optional ? (
-        <p className="muted">선택 요일 화면은 준비 중입니다.</p>
+        <OptionalDay {...view} />
       ) : (
         <RegularDay {...view} />
       )}
