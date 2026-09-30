@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { getWeek, positionOn, totalWeeks, weekInfo } from './schedule';
+import { getWeek, parseSequence, positionOn, totalWeeks, weekInfo } from './schedule';
 import { makeTestProgram } from './testProgram';
 import type { Plan } from './types';
 
@@ -71,5 +71,19 @@ describe('getWeek', () => {
   test('범위를 벗어난 주차면 null이다', () => {
     expect(getWeek(program, plan, 16)).toBeNull();
     expect(getWeek(program, plan, -1)).toBeNull();
+  });
+});
+
+describe('parseSequence', () => {
+  test('쉼표나 화살표로 구분한 블록 순서를 읽는다', () => {
+    expect(parseSequence('1,1,2,3', 3)).toEqual([1, 1, 2, 3]);
+    expect(parseSequence(' 1 → 2 → 3 ', 3)).toEqual([1, 2, 3]);
+    expect(parseSequence('1 2 3', 3)).toEqual([1, 2, 3]);
+  });
+  test('프로그램에 없는 블록 번호나 빈 값은 null', () => {
+    expect(parseSequence('1,4', 3)).toBeNull();
+    expect(parseSequence('0,1', 3)).toBeNull();
+    expect(parseSequence('', 3)).toBeNull();
+    expect(parseSequence('a,b', 3)).toBeNull();
   });
 });

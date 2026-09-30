@@ -40,3 +40,12 @@ export function getWeek(program: Program, plan: Plan, planWeek: number): Program
   const info = weekInfo(plan, planWeek);
   return program.blocks[info.block - 1]?.weeks[info.week - 1] ?? null;
 }
+
+/** "1,1,2,3" 같은 글자를 블록 순서로 바꾼다. 잘못된 값이면 null이다. */
+export function parseSequence(text: string, blockCount: number): number[] | null {
+  const parts = text.split(/[^0-9a-zA-Z]+/).filter((p) => p !== '');
+  if (parts.length === 0) return null;
+  const numbers = parts.map(Number);
+  if (numbers.some((n) => !Number.isInteger(n) || n < 1 || n > blockCount)) return null;
+  return numbers;
+}
