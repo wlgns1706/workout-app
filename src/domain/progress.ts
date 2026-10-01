@@ -160,3 +160,8 @@ export function autofillPatch(done: FillSide, next: FillSide): { weight?: number
   if (next.reps == null && done.reps != null) patch.reps = done.reps;
   return Object.keys(patch).length > 0 ? patch : null;
 }
+
+/** 세트 번호를 눌렀을 때의 다음 타입. 본 세트와 웜업을 오가고, 실패 세트는 웜업이 된다. */
+export function nextSetType(type: SetLog['type']): SetLog['type'] {
+  return type === 'warmup' ? 'work' : 'warmup';
+}

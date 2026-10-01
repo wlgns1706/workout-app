@@ -4,7 +4,8 @@ import { db } from '../../db/db';
 import { getMeta, META_LAST_BACKUP } from '../../db/repo';
 import { addDays, localDateOf, todayStr } from '../../domain/date';
 import { parseSequence, totalWeeks } from '../../domain/schedule';
-import { downloadJson } from '../../io/download';
+import { shareOrDownload } from '../../io/share';
+import { applyTheme, loadTheme, type ThemePref } from '../../ui/theme';
 import {
   applyBackup,
   applyProgram,
@@ -27,6 +28,7 @@ export default function SettingsPage() {
   const [programId, setProgramId] = useState('');
   const [startDate, setStartDate] = useState(todayStr());
   const [sequence, setSequence] = useState('1,2,3');
+  const [theme, setTheme] = useState<ThemePref>(loadTheme());
 
   if (!active) return null;
   const { plan, program, programs } = active;
@@ -83,11 +85,17 @@ export default function SettingsPage() {
 
   async function backup() {
     try {
-      downloadJson(backupFileName(), await exportBackup(db));
-      setMessage({ kind: 'ok', text: '백업 파일을 저장했습니다. 구글 드라이브 같은 곳에 옮겨 두세요.' });
+      const result = await shareOrDownload(backupFileName(), await exportBackup(db));
+      if (result === 'shared') setMessage({ kind: 'ok', text: '백업 파일을 보냈습니다.' });
+      if (result === 'downloaded') setMessage({ kind: 'ok', text: '백업 파일을 다운로드 폴더에 저장했습니다. (내 파일 → 다운로드)' });
     } catch {
       setMessage({ kind: 'error', text: '백업 파일을 만들지 못했습니다.' });
     }
+  }
+
+  function changeTheme(pref: ThemePref) {
+    setTheme(pref);
+    applyTheme(pref);
   }
 
   const summary = pending ? backupSummary(pending) : null;
@@ -167,7 +175,24 @@ export default function SettingsPage() {
       <div className="card">
         <p className="muted">마지막 백업: {lastBackup ? localDateOf(lastBackup) : '없음'}</p>
         <button className="btn primary block" onClick={backup}>백업 내보내기</button>
-        <p className="muted">복원하려면 위의 "파일 가져오기"에서 백업 파일을 고르세요.</p>
+        <p className="muted">
+          "백업 내보내기"를 누르면 공유 창이 뜹니다. 구글 드라이브나 카카오톡 "나에게 보내기"를 고르세요. 공유 창이 없는 환경에서는 다운로드 폴더(내 파일 → 다운로드)에 저장됩니다.
+        </p>
+        <p className="muted">
+          복원할 때는 위의 "프로그램 또는 백업 파일 가져오기"를 누르고, 드라이브나 다운로드 폴더에서 <code>workout-backup-날짜.json</code> 파일을 고르세요.
+        </p>
+      </div>
+
+      <h2>화면</h2>
+      <div className="card">
+        <label className="field">
+          <span>화면 테마</span>
+          <select value={theme} onChange={(e) => changeTheme(e.target.value as ThemePref)}>
+            <option value="system">폰 설정 따라가기</option>
+            <option value="light">라이트</option>
+            <option value="dark">다크</option>
+          </select>
+        </label>
       </div>
 
       <p className="muted">버전 {__APP_VERSION__}</p>

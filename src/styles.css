@@ -5,12 +5,18 @@
   --err: #b91c1c; --err-bg: #fee2e2; --warmup: #a16207; --failure: #b91c1c;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #111317; --surface: #1b1e24; --surface-2: #262a32; --border: #353b45;
     --text: #e8eaed; --muted: #9aa3af; --accent: #60a5fa; --accent-text: #0b1220;
     --ok: #86efac; --ok-bg: #14321f; --warn-bg: #3b2f12; --warn-text: #fcd34d;
     --err: #fca5a5; --err-bg: #3f1a1a; --warmup: #fcd34d; --failure: #fca5a5;
   }
+}
+:root[data-theme="dark"] {
+  --bg: #111317; --surface: #1b1e24; --surface-2: #262a32; --border: #353b45;
+  --text: #e8eaed; --muted: #9aa3af; --accent: #60a5fa; --accent-text: #0b1220;
+  --ok: #86efac; --ok-bg: #14321f; --warn-bg: #3b2f12; --warn-text: #fcd34d;
+  --err: #fca5a5; --err-bg: #3f1a1a; --warmup: #fcd34d; --failure: #fca5a5;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--text); }
@@ -68,3 +74,39 @@ label.field > span { display: block; font-size: 0.875rem; color: var(--muted); }
 .check { min-width: 48px; min-height: 48px; border-radius: 50%; border: 2px solid var(--border); background: var(--surface); font-size: 1.2rem; margin-left: auto; }
 .check.on { background: var(--ok); border-color: var(--ok); color: var(--surface); }
 .progress { position: sticky; top: 0; background: var(--bg); padding: 8px 0; z-index: 5; }
+
+/* 아래에서 올라오는 팝업 */
+.sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 30; display: flex; align-items: flex-end; justify-content: center; }
+.sheet { background: var(--surface); width: 100%; max-width: 520px; border-radius: 16px 16px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); }
+.sheet h3 { margin: 0 0 12px; font-size: 1rem; }
+.sheet .big { font-size: 2.2rem; font-weight: 700; text-align: center; width: 100%; border: 0; border-bottom: 2px solid var(--accent); background: transparent; padding: 4px 0; }
+.sheet .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
+.sheet .steps.two { grid-template-columns: repeat(2, 1fr); }
+.sheet .steps button, .sheet .choices button { min-height: 48px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); font-size: 1rem; }
+.sheet .choices { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.sheet .choices button { min-height: 40px; padding: 0 12px; }
+.sheet .choices button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+
+/* 종목 카드 (새 모양) */
+.exhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.exhead strong { font-size: 1.1rem; }
+.exmeta { display: flex; gap: 12px; align-items: center; color: var(--muted); font-size: 0.9rem; margin: 4px 0; flex-wrap: wrap; }
+.exmeta button { background: none; border: 0; padding: 4px 0; color: var(--text); font-size: 0.95rem; }
+.memo { width: 100%; border: 0 !important; background: transparent !important; padding: 4px 0 !important; color: var(--muted); }
+.setctl { display: flex; align-items: center; justify-content: space-between; background: var(--surface-2); border-radius: 10px; margin: 8px 0; }
+.setctl button { background: none; border: 0; min-width: 52px; min-height: 44px; font-size: 1.3rem; }
+.setctl button:disabled { opacity: 0.3; }
+.set2 { display: grid; grid-template-columns: 44px 1fr 1fr 52px; align-items: center; gap: 6px; padding: 6px 0; }
+.set2 .num { width: 40px; height: 40px; border-radius: 8px; border: 0; background: var(--surface-2); font-weight: 700; }
+.set2 .num.warmup { background: #facc15; color: #422006; }
+.set2 .num.failure { color: var(--failure); }
+.set2 .val { background: none; border: 0; text-align: left; font-size: 1.4rem; font-weight: 700; padding: 4px 0; }
+.set2 .val small { font-size: 0.9rem; font-weight: 400; color: var(--muted); }
+.set2 .val.placeholder { color: var(--muted); font-weight: 400; }
+.set2 .sub { grid-column: 2 / 4; font-size: 0.75rem; color: var(--muted); margin-top: -6px; }
+.set2.done .val, .set2.done .num { opacity: 0.6; }
+.menu { position: absolute; right: 0; top: 40px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; z-index: 20; min-width: 160px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+.menu button { display: block; width: 100%; text-align: left; padding: 12px; background: none; border: 0; }
+:root { color-scheme: light dark; }
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }

@@ -119,3 +119,9 @@ export function formatSet(log: SetLog): string {
   if (log.weight == null || log.weight === 0) return `${reps}회`;
   return `${log.weight}${log.unit === 'lb' ? 'lbs' : 'kg'}×${reps}`;
 }
+
+/** 종목의 모든 기록 중 가장 큰 추정 1RM */
+export function bestE1RM(chart: RpeChart, history: SetLog[]): number | null {
+  const values = history.map((h) => setE1RM(chart, h)).filter((v): v is number => v != null);
+  return values.length === 0 ? null : Math.max(...values);
+}

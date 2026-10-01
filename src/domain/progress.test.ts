@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import {
   autofillPatch,
+  nextSetType,
   dayLogId,
   dayStatus,
   exerciseDone,
@@ -183,5 +184,15 @@ describe('autofillPatch', () => {
   });
   test('방금 세트의 무게가 없으면 횟수만 채운다', () => {
     expect(autofillPatch({ repsText: '10~20', weight: null, reps: 12 }, { repsText: '10~20', weight: null, reps: null })).toEqual({ reps: 12 });
+  });
+});
+
+describe('nextSetType', () => {
+  test('번호를 누르면 웜업, 다시 누르면 본 세트', () => {
+    expect(nextSetType('work')).toBe('warmup');
+    expect(nextSetType('warmup')).toBe('work');
+  });
+  test('실패 세트를 누르면 웜업', () => {
+    expect(nextSetType('failure')).toBe('warmup');
   });
 });

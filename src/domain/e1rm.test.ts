@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { estimate1RM, formatSet, isPR, lastSession, pctFor, prefill, recommendWeight, setE1RM } from './e1rm';
+import { bestE1RM, estimate1RM, formatSet, isPR, lastSession, pctFor, prefill, recommendWeight, setE1RM } from './e1rm';
 import { newSetLog } from './progress';
 import { TEST_CHART as C } from './testChart';
 import type { SetLog, Unit } from './types';
@@ -172,5 +172,16 @@ describe('formatSet', () => {
   });
   test('무게가 없으면 횟수만', () => {
     expect(formatSet(log({ at: at(5), weight: null, reps: 12 }))).toBe('12회');
+  });
+});
+
+describe('bestE1RM', () => {
+  test('모든 기록 중 가장 큰 추정 1RM', () => {
+    const history = [log({ at: at(5), weight: 60 }), log({ at: at(8), weight: 70 }), log({ at: at(9), weight: 90, type: 'warmup' })];
+    expect(bestE1RM(C, history)).toBeCloseTo(70 / 0.653, 5);
+  });
+  test('계산할 수 있는 기록이 없으면 null', () => {
+    expect(bestE1RM(C, [])).toBeNull();
+    expect(bestE1RM(C, [log({ at: at(5), weight: null })])).toBeNull();
   });
 });

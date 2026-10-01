@@ -2,12 +2,14 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { db } from '../../db/db';
 import { defaultSetting, deleteSetLog, exerciseHistory, patchSetting, saveSetLog } from '../../db/repo';
-import { formatSet, isPR, lastSession, prefill, type DayKey, type Prefill } from '../../domain/e1rm';
-import { autofillPatch, exerciseDone, newSetLog, slotsForExercise } from '../../domain/progress';
+import { bestE1RM, formatSet, isPR, lastSession, prefill, type DayKey, type Prefill } from '../../domain/e1rm';
+import { autofillPatch, exerciseDone, newSetLog, nextSetType, slotsForExercise } from '../../domain/progress';
 import { defaultReps } from '../../domain/reps';
 import type { Plan, Program, ProgramExercise, SetLog, Unit } from '../../domain/types';
 import { fromKg, roundTo, toKg } from '../../domain/units';
 import { useTimer } from '../../ui/timer';
+import { formatClock } from '../../ui/timerMath';
+import { RepsSheet, RestSheet, WeightSheet } from './sheets';
 import { SetRow } from './SetRow';
 
 interface Props {
@@ -32,12 +34,14 @@ interface Item {
   log: SetLog | undefined;
 }
 
-const REST_OPTIONS = [30, 60, 90, 120, 150, 180, 240, 300];
+type SheetState = { kind: 'weight' | 'reps'; key: string } | { kind: 'rest' } | null;
 
 export function ExerciseCard(props: Props) {
   const { plan, planWeek, dayNo, exerciseIndex, exercise } = props;
   const timer = useTimer();
   const [open, setOpen] = useState(false);
+  const [sheet, setSheet] = useState<SheetState>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const setting = useLiveQuery(() => db.exerciseSettings.get(exercise.name), [exercise.name]) ?? defaultSetting(exercise.name);
   const history = useLiveQuery(() => exerciseHistory(db, exercise.name), [exercise.name]) ?? [];
 
@@ -45,8 +49,8 @@ export function ExerciseCard(props: Props) {
   const slots = slotsForExercise(exercise, exerciseIndex);
   const extras = mine.filter((l) => l.rowIndex === null).sort((a, b) => a.setIndex - b.setIndex);
   const extraItem = (l: SetLog): Item => ({ key: l.id, rowIndex: null, setIndex: l.setIndex, repsText: null, rpe: slots[0]?.rpe ?? null, log: l });
+  // 처방 세트 다음에 추가한 세트가 온다. 세트 타입을 바꿔도 순서는 그대로다.
   const items: Item[] = [
-    ...extras.filter((l) => l.type === 'warmup').map(extraItem),
     ...slots.map((s) => ({
       key: `${s.rowIndex}-${s.setIndex}`,
       rowIndex: s.rowIndex,
@@ -55,13 +59,13 @@ export function ExerciseCard(props: Props) {
       rpe: s.rpe,
       log: mine.find((l) => l.rowIndex === s.rowIndex && l.setIndex === s.setIndex),
     })),
-    ...extras.filter((l) => l.type !== 'warmup').map(extraItem),
+    ...extras.map(extraItem),
   ];
 
   const current: DayKey = { planId: plan.id, planWeek, dayNo };
   const last = lastSession(history, current);
   const finished = exerciseDone(plan.id, planWeek, dayNo, exercise, exerciseIndex, props.logs);
-  const unitLabel = (u: Unit) => (u === 'lb' ? 'lbs' : 'kg');
+  const best = bestE1RM(props.program.rpeChart, history);
 
   // 같은 종목에서 이미 체크한 세트가 있으면 "다음 세트 자동 채우기"가 맡는다.
   const doneReps = new Set(items.filter((i) => i.log?.done && i.log.type !== 'warmup').map((i) => i.repsText));
@@ -94,8 +98,15 @@ export function ExerciseCard(props: Props) {
 
   async function addSet() {
     const setIndex = extras.length === 0 ? 0 : Math.max(...extras.map((l) => l.setIndex)) + 1;
+    const last = items.at(-1)?.log;
     const log = newSetLog(plan.id, planWeek, dayNo, { exerciseIndex, rowIndex: null, setIndex, exerciseName: exercise.name, rpe: slots[0]?.rpe ?? null }, setting.unit);
-    await saveSetLog(db, { ...log, type: 'warmup' });
+    await saveSetLog(db, { ...log, weight: last?.weight ?? null, unit: last?.unit ?? setting.unit });
+  }
+
+  /** 마지막에 추가한 세트를 지운다. 처방 세트는 지우지 않는다. */
+  async function removeSet() {
+    const lastExtra = extras.at(-1);
+    if (lastExtra) await deleteSetLog(db, lastExtra.id);
   }
 
   async function changeUnit(unit: Unit) {
@@ -121,36 +132,47 @@ export function ExerciseCard(props: Props) {
     );
   }
 
+  const sheetItem = sheet && sheet.kind !== 'rest' ? items.find((i) => i.key === sheet.key) : undefined;
+  const sheetSuggestion = sheetItem ? suggestFor(sheetItem) : null;
+
   let workNumber = 0;
   return (
     <div className="card">
-      <div className="row between">
+      <div className="exhead">
         <strong>{exercise.name}</strong>
-        {finished && <button className="btn small" type="button" onClick={() => setOpen(false)}>접기</button>}
+        <span style={{ position: 'relative' }}>
+          <button className="btn small" type="button" aria-label="종목 메뉴" onClick={() => setMenuOpen((v) => !v)}>⋮</button>
+          {menuOpen && (
+            <div className="menu" onClick={() => setMenuOpen(false)}>
+              <button type="button" onClick={() => changeUnit(setting.unit === 'kg' ? 'lb' : 'kg')}>단위를 {setting.unit === 'kg' ? 'lbs' : 'kg'}로 바꾸기</button>
+              {props.onDefer && !finished && <button type="button" onClick={props.onDefer}>나중에 하기</button>}
+              {finished && <button type="button" onClick={() => setOpen(false)}>접기</button>}
+            </div>
+          )}
+        </span>
       </div>
-      <div className="row" style={{ margin: '6px 0' }}>
-        <select aria-label="무게 단위" value={setting.unit} onChange={(e) => changeUnit(e.target.value as Unit)}>
-          <option value="kg">kg</option>
-          <option value="lb">lbs</option>
-        </select>
-        <select aria-label="휴식 시간" value={setting.restSeconds} onChange={(e) => patchSetting(db, exercise.name, { restSeconds: Number(e.target.value) })}>
-          {REST_OPTIONS.map((s) => <option key={s} value={s}>휴식 {s}초</option>)}
-        </select>
-        {props.onDefer && !finished && <button className="btn small" type="button" onClick={props.onDefer}>나중에 하기</button>}
+      <div className="exmeta">
+        <button type="button" aria-label="휴식 시간 설정" onClick={() => setSheet({ kind: 'rest' })}>⏱ {formatClock(setting.restSeconds)}</button>
+        {best != null && <span>e1RM {best.toFixed(1)}kg</span>}
       </div>
+      {last && <p className="muted" style={{ margin: 0 }}>지난번({last.date.slice(5)}) {last.sets.map(formatSet).join(', ')}</p>}
+      {!anyDoneToday && items.some((i) => i.repsText != null && suggestFor(i)?.source === 'recommended') && (
+        <p className="muted" style={{ margin: 0 }}>흐린 숫자는 지난 기록으로 계산한 추천 무게입니다.</p>
+      )}
       <input
+        className="memo"
         type="text"
         aria-label="종목 메모"
-        placeholder="종목 메모 (기구 세팅 등)"
+        placeholder="메모... (기구 세팅 등)"
         key={setting.note}
         defaultValue={setting.note}
-        style={{ width: '100%' }}
         onBlur={(e) => e.target.value !== setting.note && patchSetting(db, exercise.name, { note: e.target.value })}
       />
-      {last && <p className="muted">지난번({last.date.slice(5)}) {last.sets.map(formatSet).join(', ')}</p>}
-      {!anyDoneToday && items.some((i) => i.repsText != null && suggestFor(i)?.source === 'recommended') && (
-        <p className="muted">흐린 숫자는 지난 기록으로 계산한 추천 무게입니다.</p>
-      )}
+      <div className="setctl">
+        <button type="button" aria-label="추가한 세트 지우기" disabled={extras.length === 0} onClick={removeSet}>−</button>
+        <span>세트 {items.length}</span>
+        <button type="button" aria-label="세트 추가" onClick={addSet}>+</button>
+      </div>
 
       {items.map((item) => {
         const type = item.log?.type ?? 'work';
@@ -161,21 +183,45 @@ export function ExerciseCard(props: Props) {
           <SetRow
             key={item.key}
             number={String(workNumber)}
-            prescription={item.repsText == null ? null : `${item.repsText}${/\d$/.test(item.repsText) ? '회' : ''}${item.rpe != null ? ` @${item.rpe}` : ''}`}
+            prescription={item.repsText == null ? '추가 세트' : `${item.repsText}${/\d$/.test(item.repsText) ? '회' : ''}${item.rpe != null ? ` @${item.rpe}` : ''}`}
             log={item.log}
             unit={unit}
             suggestedWeight={suggestion?.weight ?? null}
             suggestedReps={item.repsText == null ? null : defaultReps(item.repsText)}
             pr={item.log != null && isPR(props.program.rpeChart, item.log, history)}
-            removable={item.rowIndex === null}
-            onChange={(patch) => write(item, patch)}
+            onTypeTap={() => write(item, { type: nextSetType(type) })}
+            onWeightTap={() => setSheet({ kind: 'weight', key: item.key })}
+            onRepsTap={() => setSheet({ kind: 'reps', key: item.key })}
             onToggle={(weight, reps) => toggle(item, weight, reps)}
-            onRemove={() => item.log && deleteSetLog(db, item.log.id)}
           />
         );
       })}
-      <button className="btn small" type="button" style={{ marginTop: 8 }} onClick={addSet}>＋ 세트 추가 (웜업)</button>
-      <span className="muted"> 단위: {unitLabel(setting.unit)}</span>
+
+      {sheet?.kind === 'rest' && (
+        <RestSheet value={setting.restSeconds} onChange={(s) => patchSetting(db, exercise.name, { restSeconds: s })} onClose={() => setSheet(null)} />
+      )}
+      {sheet?.kind === 'weight' && sheetItem && (
+        <WeightSheet
+          value={sheetItem.log?.weight ?? null}
+          placeholder={sheetSuggestion?.weight ?? null}
+          unit={sheetItem.log?.unit ?? setting.unit}
+          onChange={(weight) => write(sheetItem, { weight })}
+          onUnit={changeUnit}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet?.kind === 'reps' && sheetItem && (
+        <RepsSheet
+          value={sheetItem.log?.reps ?? null}
+          placeholder={sheetItem.repsText == null ? null : defaultReps(sheetItem.repsText)}
+          rpe={sheetItem.log?.rpe ?? null}
+          type={sheetItem.log?.type ?? 'work'}
+          onChange={(reps) => write(sheetItem, { reps })}
+          onRpe={(rpe) => write(sheetItem, { rpe })}
+          onFailure={(f) => write(sheetItem, { type: f ? 'failure' : 'work' })}
+          onClose={() => setSheet(null)}
+        />
+      )}
     </div>
   );
 }
