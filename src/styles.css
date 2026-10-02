@@ -110,3 +110,38 @@ label.field > span { display: block; font-size: 0.875rem; color: var(--muted); }
 :root { color-scheme: light dark; }
 :root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"] { color-scheme: dark; }
+
+/* 날짜 버튼과 달력 */
+.datebtn { background: none; border: 0; font-size: 1.1rem; font-weight: 700; padding: 6px 0; }
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 10px 0; text-align: center; }
+.calhead { font-size: 0.75rem; color: var(--muted); }
+.calday { position: relative; aspect-ratio: 1; border: 0; border-radius: 50%; background: none; font-size: 0.95rem; }
+.calday:disabled { opacity: 0.3; }
+.calday.today { box-shadow: inset 0 0 0 2px var(--accent); font-weight: 700; }
+.calday.selected { background: var(--accent); color: var(--accent-text); }
+.calday .dot { position: absolute; left: 50%; bottom: 3px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; }
+.calday .dot.kept { background: var(--ok); }
+.calday .dot.recorded { background: var(--muted); }
+
+/* 그래프 */
+.chart { display: block; margin: 6px 0; }
+.chart .axis { font-size: 10px; fill: var(--muted); }
+.chart .picked { font-size: 12px; font-weight: 700; fill: var(--text); }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.8rem; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+
+/* 영양 막대 */
+.nbar { display: grid; grid-template-columns: 64px 1fr 96px; align-items: center; gap: 8px; margin: 4px 0; font-size: 0.9rem; }
+.nbar .track { height: 10px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
+.nbar .fill { height: 100%; border-radius: 5px; background: var(--muted); }
+.nbar .fill.ok { background: var(--ok); }
+.nbar .fill.high { background: #f97316; }
+.nbar .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* 위쪽 두 칸 전환 */
+.segment { display: flex; background: var(--surface-2); border-radius: 10px; padding: 3px; margin-bottom: 12px; }
+.segment button { flex: 1; border: 0; background: none; padding: 8px; border-radius: 8px; min-height: 40px; }
+.segment button[aria-pressed="true"] { background: var(--surface); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+
+.food { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-top: 1px dashed var(--border); width: 100%; background: none; border-left: 0; border-right: 0; border-bottom: 0; text-align: left; }
+.food small { color: var(--muted); }
