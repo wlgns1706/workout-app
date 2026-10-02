@@ -116,3 +116,49 @@ export interface MetaRow {
 }
 
 export const DEFAULT_REST_SECONDS = 120;
+
+
+export type Meal = 'breakfast' | 'lunch' | 'snack' | 'dinner';
+
+export interface Nutrients {
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+export interface FoodEntry extends Nutrients {
+  id: string;
+  date: string; // YYYY-MM-DD
+  meal: Meal;
+  name: string;
+  createdAt: string; // ISO
+}
+
+export interface FavoriteFood extends Nutrients {
+  id: string;
+  name: string;
+}
+
+export interface TargetRange {
+  min: number;
+  base: number;
+  max: number;
+}
+
+export interface NutritionTarget {
+  startDate: string; // 적용 시작일
+  kcal: TargetRange;
+  protein: TargetRange;
+  fat: TargetRange;
+  lossRate: { min: number; max: number }; // 주당 감량 kg
+}
+
+export interface BodyMeasurement {
+  date: string;
+  weightKg: number | null;
+  skeletalMuscleKg: number | null;
+  bodyFatKg: number | null;
+  bodyFatPct: number | null;
+  waistCm: number | null;
+}
