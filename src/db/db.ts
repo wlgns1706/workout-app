@@ -1,5 +1,17 @@
 import Dexie, { type Table } from 'dexie';
-import type { BodyLog, DayLog, ExerciseSetting, MetaRow, Plan, Program, SetLog } from '../domain/types';
+import type {
+  BodyLog,
+  BodyMeasurement,
+  DayLog,
+  ExerciseSetting,
+  FavoriteFood,
+  FoodEntry,
+  MetaRow,
+  NutritionTarget,
+  Plan,
+  Program,
+  SetLog,
+} from '../domain/types';
 
 export class AppDB extends Dexie {
   programs!: Table<Program, string>;
@@ -9,6 +21,10 @@ export class AppDB extends Dexie {
   bodyLogs!: Table<BodyLog, string>;
   exerciseSettings!: Table<ExerciseSetting, string>;
   meta!: Table<MetaRow, string>;
+  foodEntries!: Table<FoodEntry, string>;
+  favoriteFoods!: Table<FavoriteFood, string>;
+  nutritionTargets!: Table<NutritionTarget, string>;
+  bodyMeasurements!: Table<BodyMeasurement, string>;
 
   constructor(name = 'workout-app') {
     super(name);
@@ -20,6 +36,12 @@ export class AppDB extends Dexie {
       bodyLogs: 'date',
       exerciseSettings: 'exerciseName',
       meta: 'key',
+    });
+    this.version(2).stores({
+      foodEntries: 'id, date',
+      favoriteFoods: 'id',
+      nutritionTargets: 'startDate',
+      bodyMeasurements: 'date',
     });
   }
 }

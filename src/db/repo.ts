@@ -94,15 +94,20 @@ export async function setMeta(db: AppDB, key: string, value: string): Promise<vo
   await db.meta.put({ key, value });
 }
 
-/** 세트 기록과 몸 상태 기록 중 가장 이른 시각. 백업 알림의 기준이다. */
+/** 세트, 몸 상태, 식단, 주간 측정 중 가장 이른 기록 시각. 백업 알림의 기준이다. */
 export async function earliestRecordAt(db: AppDB): Promise<string | null> {
   const times: string[] = [];
   await db.setLogs.each((log) => {
     if (log.doneAt) times.push(log.doneAt);
   });
-  const firstBody = await db.bodyLogs.orderBy('date').first();
-  if (firstBody) {
-    const [y, m, d] = firstBody.date.split('-').map(Number);
+  const dates = [
+    (await db.bodyLogs.orderBy('date').first())?.date,
+    (await db.foodEntries.orderBy('date').first())?.date,
+    (await db.bodyMeasurements.orderBy('date').first())?.date,
+  ];
+  for (const date of dates) {
+    if (!date) continue;
+    const [y, m, d] = date.split('-').map(Number);
     times.push(new Date(y, m - 1, d).toISOString());
   }
   return times.length === 0 ? null : times.sort()[0];
