@@ -1,5 +1,8 @@
 import { HashRouter, NavLink, Route, Routes } from 'react-router-dom';
 import BodyPage from './features/body/BodyPage';
+import DietPage from './features/diet/DietPage';
+import GuidePage from './features/guide/GuidePage';
+import StatsPage from './features/stats/StatsPage';
 import SchedulePage from './features/schedule/SchedulePage';
 import SettingsPage from './features/settings/SettingsPage';
 import TodayPage from './features/today/TodayPage';
@@ -9,8 +12,9 @@ import { RestTimerBar, TimerProvider } from './ui/timer';
 
 const tabs = [
   { to: '/', label: '오늘' },
-  { to: '/schedule', label: '일정' },
+  { to: '/diet', label: '식단' },
   { to: '/body', label: '몸 상태' },
+  { to: '/stats', label: '기록' },
   { to: '/settings', label: '설정' },
 ];
 
@@ -23,6 +27,9 @@ export default function App() {
           <Route path="/" element={<TodayPage />} />
           <Route path="/workout/:planWeek/:dayNo" element={<WorkoutPage />} />
           <Route path="/schedule" element={<SchedulePage />} />
+          <Route path="/diet" element={<DietPage />} />
+          <Route path="/stats" element={<StatsPage />} />
+          <Route path="/guide" element={<GuidePage />} />
           <Route path="/body" element={<BodyPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>

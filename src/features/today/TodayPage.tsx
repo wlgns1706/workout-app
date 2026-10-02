@@ -17,6 +17,7 @@ export default function TodayPage() {
         <div className="card">
           <p>{programs.length === 0 ? '먼저 프로그램 파일을 가져오세요.' : '일정을 만들면 운동을 시작할 수 있어요.'}</p>
           <Link className="btn primary block" to="/settings">설정으로 가기</Link>
+          <Link className="btn block" to="/guide" style={{ marginTop: 8 }}>사용법 보기</Link>
         </div>
       </main>
     );
@@ -40,6 +41,7 @@ export default function TodayPage() {
           <p>{plan.startDate}에 시작합니다. {position.daysUntil}일 남았어요.</p>
           <p className="muted">{program.name} · 총 {totalWeeks(plan)}주</p>
         </div>
+        <Link className="btn block" to="/schedule">전체 일정 보기</Link>
       </main>
     );
   }
@@ -51,6 +53,7 @@ export default function TodayPage() {
           <p>일정이 끝났어요. 새 일정을 만드세요.</p>
           <Link className="btn primary block" to="/settings">새 일정 만들기</Link>
         </div>
+        <Link className="btn block" to="/schedule">전체 일정 보기</Link>
       </main>
     );
   }
@@ -71,6 +74,7 @@ export default function TodayPage() {
         <WeekDays program={program} plan={plan} planWeek={position.planWeek} highlightNext />
       </div>
       <p className="muted">테두리가 굵은 요일이 다음에 할 운동입니다. 요일을 누르면 기록 화면이 열립니다.</p>
+      <Link className="btn block" to="/schedule">전체 일정 보기</Link>
     </main>
   );
 }

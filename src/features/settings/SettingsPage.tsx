@@ -4,6 +4,8 @@ import { db } from '../../db/db';
 import { getMeta, META_LAST_BACKUP } from '../../db/repo';
 import { addDays, localDateOf, todayStr } from '../../domain/date';
 import { parseSequence, totalWeeks } from '../../domain/schedule';
+import { Link } from 'react-router-dom';
+import { NutritionTargets } from './NutritionTargets';
 import { shareOrDownload } from '../../io/share';
 import { applyTheme, loadTheme, type ThemePref } from '../../ui/theme';
 import {
@@ -103,6 +105,7 @@ export default function SettingsPage() {
   return (
     <main className="page">
       <h1>설정</h1>
+      <Link className="btn block" to="/guide" style={{ marginBottom: 12 }}>사용법 보기</Link>
       {message && <div className={message.kind} role="status">{message.text}</div>}
 
       <h2>프로그램</h2>
@@ -170,6 +173,9 @@ export default function SettingsPage() {
           </>
         )}
       </div>
+
+      <h2>영양 목표</h2>
+      <NutritionTargets />
 
       <h2>백업</h2>
       <div className="card">
