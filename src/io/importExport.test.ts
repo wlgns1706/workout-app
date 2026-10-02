@@ -163,6 +163,8 @@ describe('backupSummary, backupFileName', () => {
     expect(backupSummary(await exportBackup(db))).toEqual({
       setCount: 1,
       bodyCount: 1,
+      foodCount: 0,
+      measureCount: 0,
       programNames: ['테스트 프로그램'],
       from: '2026-10-05',
       to: '2026-10-07',
@@ -173,5 +175,63 @@ describe('backupSummary, backupFileName', () => {
   });
   test('파일 이름에 날짜가 들어간다', () => {
     expect(backupFileName(new Date(2026, 9, 20, 9, 0))).toBe('workout-backup-2026-10-20.json');
+  });
+});
+
+
+describe('백업 버전 2', () => {
+  test('식단, 자주 먹는 음식, 목표, 주간 측정도 왕복한다', async () => {
+    await seed(db);
+    await db.foodEntries.put({ id: 'f1', date: '2026-10-08', meal: 'lunch', name: '밥', kcal: 300, protein: 6, carbs: 65, fat: 1, createdAt: '2026-10-08T03:00:00.000Z' });
+    await db.favoriteFoods.put({ id: 'v1', name: '닭가슴살', kcal: 110, protein: 23, carbs: 0, fat: 1.5});
+    await db.nutritionTargets.put({
+      startDate: '2026-10-01',
+      kcal: { min: 1, base: 2, max: 3 },
+      protein: { min: 1, base: 2, max: 3 },
+      fat: { min: 1, base: 2, max: 3 },
+      lossRate: { min: 0.1, max: 0.2 },
+    });
+    await db.bodyMeasurements.put({ date: '2026-10-09', weightKg: 80, skeletalMuscleKg: 35, bodyFatKg: 15, bodyFatPct: 18.8, waistCm: 85 });
+    const backup = await exportBackup(db);
+    expect(backup.formatVersion).toBe(2);
+    const parsed = parseImport(JSON.stringify(backup));
+    const other = new AppDB(`io-test-v2-${n++}`);
+    if (parsed.kind === 'backup') await applyBackup(other, parsed.backup);
+    expect(await other.foodEntries.toArray()).toEqual(await db.foodEntries.toArray());
+    expect(await other.favoriteFoods.toArray()).toEqual(await db.favoriteFoods.toArray());
+    expect(await other.nutritionTargets.toArray()).toEqual(await db.nutritionTargets.toArray());
+    expect(await other.bodyMeasurements.toArray()).toEqual(await db.bodyMeasurements.toArray());
+    expect(backupSummary(backup)).toMatchObject({ foodCount: 1, measureCount: 1, to: '2026-10-09' });
+  });
+
+  test('버전 1 백업을 가져오면 새 테이블은 비운 채 복원한다', async () => {
+    await seed(db);
+    const v1 = await exportBackup(db);
+    const legacy: Record<string, unknown> = { ...v1, formatVersion: 1 };
+    delete legacy.foodEntries;
+    delete legacy.favoriteFoods;
+    delete legacy.nutritionTargets;
+    delete legacy.bodyMeasurements;
+    const target = new AppDB(`io-test-legacy-${n++}`);
+    await target.foodEntries.put({ id: 'old', date: '2026-10-01', meal: 'lunch', name: 'x', kcal: 1, protein: 0, carbs: 0, fat: 0, createdAt: 'x' });
+    const parsed = parseImport(JSON.stringify(legacy));
+    expect(parsed.kind).toBe('backup');
+    if (parsed.kind === 'backup') await applyBackup(target, parsed.backup);
+    expect(await target.setLogs.count()).toBe(1);
+    expect(await target.foodEntries.count()).toBe(0);
+  });
+
+  test('버전 2 백업에서 새 테이블이 빠졌거나 키가 없으면 거부한다', async () => {
+    const v2 = await exportBackup(db);
+    const missing: Record<string, unknown> = { ...v2 };
+    delete missing.foodEntries;
+    expect(() => parseImport(JSON.stringify(missing))).toThrow(ImportError);
+    const noKey = { ...v2, bodyMeasurements: [{ weightKg: 80 }] };
+    expect(() => parseImport(JSON.stringify(noKey))).toThrow(ImportError);
+  });
+
+  test('버전 3 백업은 거부한다', async () => {
+    const v3 = { ...(await exportBackup(db)), formatVersion: 3 };
+    expect(() => parseImport(JSON.stringify(v3))).toThrow(/버전/);
   });
 });

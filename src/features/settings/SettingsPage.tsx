@@ -122,7 +122,7 @@ export default function SettingsPage() {
         <div className="card">
           <strong>이 백업으로 복원할까요?</strong>
           <p className="muted">
-            세트 기록 {summary.setCount}개, 몸 상태 기록 {summary.bodyCount}개
+            세트 기록 {summary.setCount}개, 몸 상태 기록 {summary.bodyCount}개, 식단 {summary.foodCount}개, 주간 측정 {summary.measureCount}개
             {summary.from && ` · ${summary.from} ~ ${summary.to}`}
             <br />프로그램: {summary.programNames.join(', ') || '없음'}
             <br />저장한 날: {localDateOf(pending.exportedAt)}

@@ -1,15 +1,29 @@
 import type { AppDB } from '../db/db';
 import { META_LAST_BACKUP } from '../db/repo';
 import { localDateOf, todayStr } from '../domain/date';
-import type { BodyLog, DayLog, ExerciseSetting, MetaRow, Plan, Program, SetLog } from '../domain/types';
+import type {
+  BodyLog,
+  BodyMeasurement,
+  DayLog,
+  ExerciseSetting,
+  FavoriteFood,
+  FoodEntry,
+  MetaRow,
+  NutritionTarget,
+  Plan,
+  Program,
+  SetLog,
+} from '../domain/types';
 
-export const FORMAT_VERSION = 1;
+export const FORMAT_VERSION = 2;
+/** 프로그램 파일 형식은 백업과 따로 센다. */
+export const PROGRAM_FORMAT_VERSION = 1;
 
 export class ImportError extends Error {}
 
 export interface BackupFile {
   type: 'workout-backup';
-  formatVersion: 1;
+  formatVersion: 1 | 2;
   exportedAt: string;
   programs: Program[];
   plans: Plan[];
@@ -18,6 +32,10 @@ export interface BackupFile {
   bodyLogs: BodyLog[];
   exerciseSettings: ExerciseSetting[];
   meta: MetaRow[];
+  foodEntries: FoodEntry[];
+  favoriteFoods: FavoriteFood[];
+  nutritionTargets: NutritionTarget[];
+  bodyMeasurements: BodyMeasurement[];
 }
 
 export type Parsed = { kind: 'program'; program: Program } | { kind: 'backup'; backup: BackupFile };
@@ -30,13 +48,13 @@ function fail(message: string): never {
   throw new ImportError(message);
 }
 
-function checkVersion(data: Obj) {
+function checkVersion(data: Obj, max: number) {
   if (typeof data.formatVersion !== 'number') fail('파일 형식 버전이 없습니다.');
-  if (data.formatVersion > FORMAT_VERSION) fail('이 파일은 더 새로운 버전의 앱에서 만든 것입니다. 앱을 새 버전으로 갱신한 뒤 다시 시도하세요.');
+  if (data.formatVersion > max) fail('이 파일은 더 새로운 버전의 앱에서 만든 것입니다. 앱을 새 버전으로 갱신한 뒤 다시 시도하세요.');
 }
 
 function checkProgram(data: Obj): Program {
-  checkVersion(data);
+  checkVersion(data, PROGRAM_FORMAT_VERSION);
   if (!isStr(data.id) || !isStr(data.name)) fail('프로그램 파일에 이름이 없습니다.');
   if (!Array.isArray(data.blocks) || data.blocks.length === 0) fail('프로그램 파일에 블록이 없습니다.');
   for (const block of data.blocks as unknown[]) {
@@ -73,10 +91,20 @@ const TABLE_KEYS: [keyof BackupFile, string][] = [
   ['bodyLogs', 'date'],
   ['exerciseSettings', 'exerciseName'],
   ['meta', 'key'],
+  ['foodEntries', 'id'],
+  ['favoriteFoods', 'id'],
+  ['nutritionTargets', 'startDate'],
+  ['bodyMeasurements', 'date'],
 ];
 
+/** 버전 2에서 생긴 테이블. 버전 1 백업에는 없으므로 빈 배열로 본다. */
+const V2_TABLES = ['foodEntries', 'favoriteFoods', 'nutritionTargets', 'bodyMeasurements'];
+
 function checkBackup(data: Obj): BackupFile {
-  checkVersion(data);
+  checkVersion(data, FORMAT_VERSION);
+  if (data.formatVersion === 1) {
+    for (const table of V2_TABLES) if (data[table] === undefined) data[table] = [];
+  }
   for (const [table, key] of TABLE_KEYS) {
     const rows = data[table];
     if (!Array.isArray(rows)) fail('백업 파일의 내용이 빠져 있습니다.');
@@ -106,7 +134,7 @@ export async function exportBackup(db: AppDB, now: Date = new Date()): Promise<B
   await db.meta.put({ key: META_LAST_BACKUP, value: exportedAt });
   return {
     type: 'workout-backup',
-    formatVersion: 1,
+    formatVersion: 2,
     exportedAt,
     programs: await db.programs.toArray(),
     plans: await db.plans.toArray(),
@@ -115,6 +143,10 @@ export async function exportBackup(db: AppDB, now: Date = new Date()): Promise<B
     bodyLogs: await db.bodyLogs.toArray(),
     exerciseSettings: await db.exerciseSettings.toArray(),
     meta: await db.meta.toArray(),
+    foodEntries: await db.foodEntries.toArray(),
+    favoriteFoods: await db.favoriteFoods.toArray(),
+    nutritionTargets: await db.nutritionTargets.toArray(),
+    bodyMeasurements: await db.bodyMeasurements.toArray(),
   };
 }
 
@@ -128,6 +160,10 @@ export async function applyBackup(db: AppDB, backup: BackupFile): Promise<void> 
     await db.bodyLogs.bulkPut(backup.bodyLogs);
     await db.exerciseSettings.bulkPut(backup.exerciseSettings);
     await db.meta.bulkPut(backup.meta);
+    await db.foodEntries.bulkPut(backup.foodEntries);
+    await db.favoriteFoods.bulkPut(backup.favoriteFoods);
+    await db.nutritionTargets.bulkPut(backup.nutritionTargets);
+    await db.bodyMeasurements.bulkPut(backup.bodyMeasurements);
   });
 }
 
@@ -139,10 +175,14 @@ export function backupSummary(backup: BackupFile) {
   const dates = [
     ...backup.setLogs.filter((l) => l.doneAt).map((l) => localDateOf(l.doneAt!)),
     ...backup.bodyLogs.map((b) => b.date),
+    ...backup.foodEntries.map((f) => f.date),
+    ...backup.bodyMeasurements.map((m) => m.date),
   ].sort();
   return {
     setCount: backup.setLogs.filter((l) => l.done).length,
     bodyCount: backup.bodyLogs.length,
+    foodCount: backup.foodEntries.length,
+    measureCount: backup.bodyMeasurements.length,
     programNames: backup.programs.map((p) => p.name),
     from: dates[0] ?? null,
     to: dates.at(-1) ?? null,
