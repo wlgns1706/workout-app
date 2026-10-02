@@ -145,3 +145,18 @@ label.field > span { display: block; font-size: 0.875rem; color: var(--muted); }
 
 .food { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-top: 1px dashed var(--border); width: 100%; background: none; border-left: 0; border-right: 0; border-bottom: 0; text-align: left; }
 .food small { color: var(--muted); }
+
+/* 홈 */
+.hero { padding: 8px 0 4px; }
+.dday { font-size: 1.6rem; font-weight: 800; }
+.todo { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-top: 1px dashed var(--border); }
+.todo:first-child { border-top: 0; }
+.todo-mark { color: var(--muted); font-size: 1.1rem; line-height: 1.4; }
+.todo-mark.on { color: var(--ok); }
+.goalbar { height: 12px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
+.goalbar span { display: block; height: 100%; background: var(--ok); border-radius: 6px; }
+.homecal .calday { aspect-ratio: auto; min-height: 46px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; padding: 2px 0; }
+.homecal .marks { display: flex; gap: 2px; font-size: 0.7rem; line-height: 1; min-height: 12px; }
+.homecal .wk { color: var(--accent); font-weight: 700; }
+.homecal .dm.kept { color: var(--ok); }
+.homecal .dm.recorded { color: var(--muted); }

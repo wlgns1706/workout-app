@@ -5,6 +5,7 @@ import { getMeta, META_LAST_BACKUP } from '../../db/repo';
 import { addDays, localDateOf, todayStr } from '../../domain/date';
 import { parseSequence, totalWeeks } from '../../domain/schedule';
 import { Link } from 'react-router-dom';
+import { GoalWeight } from './GoalWeight';
 import { NutritionTargets } from './NutritionTargets';
 import { shareOrDownload } from '../../io/share';
 import { applyTheme, loadTheme, type ThemePref } from '../../ui/theme';
@@ -176,6 +177,9 @@ export default function SettingsPage() {
 
       <h2>영양 목표</h2>
       <NutritionTargets />
+
+      <h2>목표 체중</h2>
+      <GoalWeight />
 
       <h2>백업</h2>
       <div className="card">
