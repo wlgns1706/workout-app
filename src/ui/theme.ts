@@ -3,7 +3,7 @@ export type ThemePref = 'system' | 'light' | 'dark';
 const KEY = 'theme';
 
 export function parseTheme(value: string | null): ThemePref {
-  return value === 'light' || value === 'dark' ? value : 'system';
+  return value === 'light' || value === 'system' ? value : 'dark';
 }
 
 /** <html data-theme> 값. 시스템이면 속성을 두지 않는다. */

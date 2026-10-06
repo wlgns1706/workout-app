@@ -99,3 +99,8 @@ export function recentPR(chart: RpeChart, logs: SetLog[], today: string, days = 
   const { at: _at, ...rest } = best;
   return rest;
 }
+
+/** 이번 주 정규 요일 중 완료한 요일 수 */
+export function weekWorkoutProgress(regularDays: number[], statusOf: (dayNo: number) => 'none' | 'partial' | 'done'): { done: number; total: number } {
+  return { done: regularDays.filter((d) => statusOf(d) === 'done').length, total: regularDays.length };
+}

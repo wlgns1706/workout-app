@@ -165,3 +165,12 @@ export function autofillPatch(done: FillSide, next: FillSide): { weight?: number
 export function nextSetType(type: SetLog['type']): SetLog['type'] {
   return type === 'warmup' ? 'work' : 'warmup';
 }
+
+/** 그날 실제로 하는 종목 이름. 대체 운동을 골랐으면 그 이름이다. */
+export function exerciseNameFor(
+  exercise: ProgramExercise,
+  exerciseIndex: number,
+  dayLog: Pick<DayLog, 'substitutions'> | undefined,
+): string {
+  return dayLog?.substitutions?.[exerciseIndex] ?? exercise.name;
+}

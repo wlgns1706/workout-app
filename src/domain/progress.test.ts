@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import {
   autofillPatch,
+  exerciseNameFor,
   nextSetType,
   dayLogId,
   dayStatus,
@@ -194,5 +195,17 @@ describe('nextSetType', () => {
   });
   test('실패 세트를 누르면 웜업', () => {
     expect(nextSetType('failure')).toBe('warmup');
+  });
+});
+
+describe('exerciseNameFor', () => {
+  const ex = { name: '스쿼트A', rows: [], alternatives: ['스쿼트B', '스쿼트C'] };
+  test('바꾼 종목이 없으면 원래 이름', () => {
+    expect(exerciseNameFor(ex, 0, undefined)).toBe('스쿼트A');
+    expect(exerciseNameFor(ex, 0, { substitutions: {} })).toBe('스쿼트A');
+  });
+  test('그날 바꾼 종목이 있으면 그 이름', () => {
+    expect(exerciseNameFor(ex, 0, { substitutions: { 0: '스쿼트C' } })).toBe('스쿼트C');
+    expect(exerciseNameFor(ex, 1, { substitutions: { 0: '스쿼트C' } })).toBe('스쿼트A');
   });
 });

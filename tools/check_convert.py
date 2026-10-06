@@ -52,6 +52,10 @@ def main(xlsx, out):
     week1 = program["blocks"][0]["weeks"][0]
     assert all(d["cardio"] for d in week1["days"][:4]), "D1~D4에는 유산소 줄이 있어야 한다"
     assert all(d["optionsText"] for d in week1["days"][4:]), "D5, D6에는 옵션 글이 있어야 한다"
+    with_alts = [e for b in program["blocks"] for w in b["weeks"] for d in w["days"] for e in d["exercises"] if e.get("alternatives")]
+    assert with_alts, "대체 운동 목록이 하나도 없다"
+    assert all(e["name"] not in e["alternatives"] for e in with_alts), "대체 운동 목록에 자기 자신이 들어 있다"
+    print(f"대체 운동이 있는 종목 {len(with_alts)}개, 예: {with_alts[0]['name']} → {with_alts[0]['alternatives']}")
     assert program["rpeChart"]["reps"] == list(range(1, 13))
     assert len(program["rpeChart"]["rows"]) == 8
     assert program["rpeChart"]["rows"][0]["pct"][0] == 1

@@ -1,22 +1,25 @@
 :root {
-  --bg: #f4f5f7; --surface: #ffffff; --surface-2: #eceef2; --border: #d9dde4;
-  --text: #1a1d21; --muted: #626b78; --accent: #2563eb; --accent-text: #ffffff;
-  --ok: #15803d; --ok-bg: #dcfce7; --warn-bg: #fef3c7; --warn-text: #92400e;
-  --err: #b91c1c; --err-bg: #fee2e2; --warmup: #a16207; --failure: #b91c1c;
+  --bg: #F3F4F1; --surface: #FFFFFF; --surface-2: #ECEEE8; --border: #DADDD4;
+  --text: #15171A; --muted: #5F6670; --accent: #3F6212; --accent-text: #FFFFFF;
+  --ok: #4D7C0F; --ok-bg: #E7F2D0; --warn-bg: #FEF3C7; --warn-text: #92400E;
+  --err: #B91C1C; --err-bg: #FEE2E2; --warmup: #CA8A04; --failure: #DC2626;
+  --hot: #EA580C; --ring-track: #E3E6DD;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #111317; --surface: #1b1e24; --surface-2: #262a32; --border: #353b45;
-    --text: #e8eaed; --muted: #9aa3af; --accent: #60a5fa; --accent-text: #0b1220;
-    --ok: #86efac; --ok-bg: #14321f; --warn-bg: #3b2f12; --warn-text: #fcd34d;
-    --err: #fca5a5; --err-bg: #3f1a1a; --warmup: #fcd34d; --failure: #fca5a5;
+    --bg: #0E0F11; --surface: #1A1C20; --surface-2: #262930; --border: #2E323A;
+    --text: #F2F3F5; --muted: #8A8F98; --accent: #C6F432; --accent-text: #111214;
+    --ok: #C6F432; --ok-bg: #2A3313; --warn-bg: #3A2E12; --warn-text: #FFD166;
+    --err: #FF6B6B; --err-bg: #3A1A1A; --warmup: #FACC15; --failure: #FF6B6B;
+    --hot: #FF9F43; --ring-track: #2A2D33;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #111317; --surface: #1b1e24; --surface-2: #262a32; --border: #353b45;
-  --text: #e8eaed; --muted: #9aa3af; --accent: #60a5fa; --accent-text: #0b1220;
-  --ok: #86efac; --ok-bg: #14321f; --warn-bg: #3b2f12; --warn-text: #fcd34d;
-  --err: #fca5a5; --err-bg: #3f1a1a; --warmup: #fcd34d; --failure: #fca5a5;
+  --bg: #0E0F11; --surface: #1A1C20; --surface-2: #262930; --border: #2E323A;
+  --text: #F2F3F5; --muted: #8A8F98; --accent: #C6F432; --accent-text: #111214;
+  --ok: #C6F432; --ok-bg: #2A3313; --warn-bg: #3A2E12; --warn-text: #FFD166;
+  --err: #FF6B6B; --err-bg: #3A1A1A; --warmup: #FACC15; --failure: #FF6B6B;
+  --hot: #FF9F43; --ring-track: #2A2D33;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--text); }
@@ -160,3 +163,55 @@ label.field > span { display: block; font-size: 0.875rem; color: var(--muted); }
 .homecal .wk { color: var(--accent); font-weight: 700; }
 .homecal .dm.kept { color: var(--ok); }
 .homecal .dm.recorded { color: var(--muted); }
+
+/* ===== 디자인 A: 다크 스포츠 ===== */
+body { font-family: "Pretendard", "Apple SD Gothic Neo", system-ui, "Malgun Gothic", "Noto Sans KR", sans-serif; letter-spacing: -0.01em; }
+h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.03em; }
+h2 { font-size: 0.85rem; font-weight: 700; color: var(--muted); letter-spacing: 0.02em; margin: 22px 0 8px; }
+.card { border-radius: 18px; border-color: transparent; padding: 14px; }
+:root[data-theme="light"] .card { border-color: var(--border); }
+.btn { border-radius: 12px; font-weight: 600; background: var(--surface-2); border-color: transparent; }
+.btn.primary { background: var(--accent); color: var(--accent-text); }
+.btn.small { border-radius: 10px; }
+input[type="text"], input[type="date"], input[type="number"], select, textarea { background: var(--surface-2); border-color: transparent; border-radius: 10px; }
+.tabbar { background: var(--bg); border-top: 1px solid var(--border); }
+.tabbar a { font-weight: 600; }
+.tabbar a.active { color: var(--accent); }
+.timerbar { background: var(--accent); color: var(--accent-text); border-radius: 18px; }
+.timerbar.urgent { background: var(--hot); }
+.check { border-color: var(--surface-2); background: var(--surface-2); color: var(--muted); }
+.check.on { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.set2 .val { font-variant-numeric: tabular-nums; }
+.chip.pr { background: var(--accent); color: var(--accent-text); }
+.dday { font-size: 2.6rem; font-weight: 900; color: var(--accent); letter-spacing: -0.04em; line-height: 1.1; }
+.hero { margin-bottom: 12px; }
+.hero .muted { font-size: 0.85rem; }
+.nbar .fill.ok { background: var(--accent); }
+.nbar .fill.high { background: var(--hot); }
+.goalbar span { background: var(--accent); }
+.segment { background: var(--surface); border-radius: 14px; }
+.segment button[aria-pressed="true"] { background: var(--surface-2); color: var(--accent); box-shadow: none; }
+.daybtn { border-radius: 12px; border-color: transparent; background: var(--surface-2); }
+.daybtn.done { background: var(--accent); color: var(--accent-text); }
+.daybtn.next { border: 2px solid var(--accent); }
+.calday.today { box-shadow: inset 0 0 0 2px var(--accent); }
+.calday.selected { background: var(--accent); color: var(--accent-text); }
+.todo-mark.on { color: var(--accent); }
+
+/* 팝업: 화면의 90%까지, 안쪽 스크롤, 닫기 버튼 고정 */
+.sheet { max-height: 90dvh; display: flex; flex-direction: column; border-radius: 22px 22px 0 0; }
+.sheet-body { overflow-y: auto; flex: 1 1 auto; min-height: 0; padding-bottom: 8px; -webkit-overflow-scrolling: touch; }
+.sheet-close { margin-top: 10px; flex: 0 0 auto; }
+.sheet .big { border-bottom-color: var(--accent); }
+.favname { background: none; border: 0; padding: 4px 0; text-align: left; flex: 1; }
+.exname { background: none; border: 0; padding: 0; text-align: left; font-size: 1.1rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
+.exname .swap { color: var(--accent); font-size: 0.95rem; }
+.altlist { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+.altlist button { text-align: left; padding: 12px; border-radius: 12px; border: 0; background: var(--surface-2); }
+.altlist button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); }
+
+/* 링 대시보드 */
+.rings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.ring { display: flex; flex-direction: column; align-items: center; gap: 2px; background: var(--surface); border-radius: 18px; padding: 12px 4px; text-decoration: none; color: var(--text); }
+.ring .rlabel { font-size: 0.75rem; font-weight: 700; }
+.ring .rsub { font-size: 0.7rem; color: var(--muted); }

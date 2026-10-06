@@ -11,6 +11,7 @@ import {
   recentPR,
   remainingToday,
   weightStreak,
+  weekWorkoutProgress,
   workoutDates,
 } from './home';
 
@@ -123,5 +124,13 @@ describe('recentPR', () => {
   test('14일보다 오래된 PR과 첫 기록은 보여주지 않는다', () => {
     const logs = [log('A', new Date(2026, 8, 1), 60), log('A', new Date(2026, 8, 10), 65), log('C', new Date(2026, 9, 9), 50)];
     expect(recentPR(C, logs, '2026-10-10')).toBeNull();
+  });
+});
+
+describe('weekWorkoutProgress', () => {
+  test('이번 주 정규 요일 중 완료한 수', () => {
+    const status = (d: number) => (d <= 2 ? 'done' : d === 3 ? 'partial' : 'none') as 'done' | 'partial' | 'none';
+    expect(weekWorkoutProgress([1, 2, 3, 4], status)).toEqual({ done: 2, total: 4 });
+    expect(weekWorkoutProgress([], status)).toEqual({ done: 0, total: 0 });
   });
 });

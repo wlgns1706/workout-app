@@ -10,9 +10,10 @@ describe('themeAttribute', () => {
 });
 
 describe('parseTheme', () => {
-  test('저장된 값이 없거나 잘못됐으면 시스템', () => {
-    expect(parseTheme(null)).toBe('system');
-    expect(parseTheme('blue')).toBe('system');
+  test('저장된 값이 없거나 잘못됐으면 다크 (기본 디자인)', () => {
+    expect(parseTheme(null)).toBe('dark');
+    expect(parseTheme('blue')).toBe('dark');
+    expect(parseTheme('system')).toBe('system');
     expect(parseTheme('dark')).toBe('dark');
   });
 });

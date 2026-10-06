@@ -106,3 +106,21 @@ export function RestSheet({ value, onChange, onClose }: { value: number; onChang
     </Sheet>
   );
 }
+
+export function AltSheet({ original, options, current, onPick, onClose }: { original: string; options: string[]; current: string; onPick(name: string): void; onClose(): void }) {
+  const all = [original, ...options.filter((o) => o !== original)];
+  return (
+    <Sheet title="대체 운동 고르기" onClose={onClose} closeLabel="닫기">
+      {options.length === 0 && <p className="muted">이 종목에는 엑셀에 정해진 대체 운동이 없습니다.</p>}
+      <div className="altlist">
+        {all.map((n) => (
+          <button key={n} type="button" aria-pressed={n === current} onClick={() => onPick(n)}>
+            {n}
+            {n === original && <small className="muted"> · 프로그램 종목</small>}
+          </button>
+        ))}
+      </div>
+      <p className="muted">바꾼 종목은 오늘 이 요일에만 적용됩니다. 기록은 실제로 한 종목 이름으로 남습니다.</p>
+    </Sheet>
+  );
+}

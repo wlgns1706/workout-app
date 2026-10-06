@@ -1,15 +1,15 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { db } from '../../db/db';
-import { defaultSetting, deleteSetLog, exerciseHistory, patchSetting, saveSetLog } from '../../db/repo';
+import { defaultSetting, deleteSetLog, exerciseHistory, patchDayLog, patchSetting, saveSetLog } from '../../db/repo';
 import { bestE1RM, formatSet, isPR, lastSession, prefill, type DayKey, type Prefill } from '../../domain/e1rm';
-import { autofillPatch, exerciseDone, newSetLog, nextSetType, slotsForExercise } from '../../domain/progress';
+import { autofillPatch, dayLogId, exerciseDone, exerciseNameFor, newSetLog, nextSetType, slotsForExercise } from '../../domain/progress';
 import { defaultReps } from '../../domain/reps';
 import type { Plan, Program, ProgramExercise, SetLog, Unit } from '../../domain/types';
 import { fromKg, roundTo, toKg } from '../../domain/units';
 import { useTimer } from '../../ui/timer';
 import { formatClock } from '../../ui/timerMath';
-import { RepsSheet, RestSheet, WeightSheet } from './sheets';
+import { AltSheet, RepsSheet, RestSheet, WeightSheet } from './sheets';
 import { SetRow } from './SetRow';
 
 interface Props {
@@ -34,16 +34,19 @@ interface Item {
   log: SetLog | undefined;
 }
 
-type SheetState = { kind: 'weight' | 'reps'; key: string } | { kind: 'rest' } | null;
+type SheetState = { kind: 'weight' | 'reps'; key: string } | { kind: 'rest' } | { kind: 'alt' } | null;
 
 export function ExerciseCard(props: Props) {
   const { plan, planWeek, dayNo, exerciseIndex, exercise } = props;
   const timer = useTimer();
-  const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const [sheet, setSheet] = useState<SheetState>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const setting = useLiveQuery(() => db.exerciseSettings.get(exercise.name), [exercise.name]) ?? defaultSetting(exercise.name);
-  const history = useLiveQuery(() => exerciseHistory(db, exercise.name), [exercise.name]) ?? [];
+  // 대체 운동은 처방이 속한 요일의 기록(dayLog)에 저장한다.
+  const dayLog = useLiveQuery(() => db.dayLogs.get(dayLogId(plan.id, planWeek, dayNo)), [plan.id, planWeek, dayNo]);
+  const name = exerciseNameFor(exercise, exerciseIndex, dayLog);
+  const setting = useLiveQuery(() => db.exerciseSettings.get(name), [name]) ?? defaultSetting(name);
+  const history = useLiveQuery(() => exerciseHistory(db, name), [name]) ?? [];
 
   const mine = props.logs.filter((l) => l.dayNo === dayNo && l.exerciseIndex === exerciseIndex);
   const slots = slotsForExercise(exercise, exerciseIndex);
@@ -78,7 +81,7 @@ export function ExerciseCard(props: Props) {
   async function write(item: Item, patch: Partial<SetLog>) {
     const base =
       item.log ??
-      newSetLog(plan.id, planWeek, dayNo, { exerciseIndex, rowIndex: item.rowIndex, setIndex: item.setIndex, exerciseName: exercise.name, rpe: item.rpe }, setting.unit);
+      newSetLog(plan.id, planWeek, dayNo, { exerciseIndex, rowIndex: item.rowIndex, setIndex: item.setIndex, exerciseName: name, rpe: item.rpe }, setting.unit);
     await saveSetLog(db, { ...base, ...patch });
   }
 
@@ -99,7 +102,7 @@ export function ExerciseCard(props: Props) {
   async function addSet() {
     const setIndex = extras.length === 0 ? 0 : Math.max(...extras.map((l) => l.setIndex)) + 1;
     const last = items.at(-1)?.log;
-    const log = newSetLog(plan.id, planWeek, dayNo, { exerciseIndex, rowIndex: null, setIndex, exerciseName: exercise.name, rpe: slots[0]?.rpe ?? null }, setting.unit);
+    const log = newSetLog(plan.id, planWeek, dayNo, { exerciseIndex, rowIndex: null, setIndex, exerciseName: name, rpe: slots[0]?.rpe ?? null }, setting.unit);
     await saveSetLog(db, { ...log, weight: last?.weight ?? null, unit: last?.unit ?? setting.unit });
   }
 
@@ -110,7 +113,7 @@ export function ExerciseCard(props: Props) {
   }
 
   async function changeUnit(unit: Unit) {
-    await patchSetting(db, exercise.name, { unit });
+    await patchSetting(db, name, { unit });
     for (const log of mine) {
       if (log.done || log.unit === unit) continue;
       const weight = log.weight == null ? null : roundTo(fromKg(toKg(log.weight, log.unit), unit), unit === 'lb' ? 1 : 0.5);
@@ -118,35 +121,55 @@ export function ExerciseCard(props: Props) {
     }
   }
 
-  if (finished && !open) {
+  async function chooseAlternative(choice: string) {
+    const substitutions = { ...(dayLog?.substitutions ?? {}) };
+    if (choice === exercise.name) delete substitutions[exerciseIndex];
+    else substitutions[exerciseIndex] = choice;
+    await patchDayLog(db, plan.id, planWeek, dayNo, { substitutions });
+    setSheet(null);
+  }
+
+  const pr = mine.some((l) => isPR(props.program.rpeChart, l, history));
+  const nameButton = (
+    <button type="button" className="exname" aria-label={`${name}. 누르면 대체 운동을 고릅니다`} onClick={() => setSheet({ kind: 'alt' })}>
+      {finished && '✓ '}{name}
+      {name !== exercise.name && <small className="muted"> (원래 {exercise.name})</small>}
+      {exercise.alternatives?.length ? <span className="swap"> ⇄</span> : null}
+    </button>
+  );
+  const altSheet = sheet?.kind === 'alt' && (
+    <AltSheet original={exercise.name} options={exercise.alternatives ?? []} current={name} onPick={chooseAlternative} onClose={() => setSheet(null)} />
+  );
+
+  if (collapsed) {
     return (
       <div className="card">
-        <button type="button" className="row between" style={{ width: '100%', background: 'none', border: 0, padding: 0, textAlign: 'left' }} onClick={() => setOpen(true)}>
+        <button type="button" className="row between" style={{ width: '100%', background: 'none', border: 0, padding: 0, textAlign: 'left' }} onClick={() => setCollapsed(false)}>
           <strong>
-            ✓ {exercise.name}
-            {mine.some((l) => isPR(props.program.rpeChart, l, history)) && <> <span className="chip pr">PR</span></>}
+            {finished && '✓ '}{name}
+            {pr && <> <span className="chip pr">PR</span></>}
           </strong>
-          <span className="muted">{mine.filter((l) => l.done && l.type !== 'warmup').map(formatSet).join(', ')}</span>
+          <span className="muted">{mine.filter((l) => l.done && l.type !== 'warmup').map(formatSet).join(', ') || '펼치기'}</span>
         </button>
       </div>
     );
   }
 
-  const sheetItem = sheet && sheet.kind !== 'rest' ? items.find((i) => i.key === sheet.key) : undefined;
+  const sheetItem = sheet && (sheet.kind === 'weight' || sheet.kind === 'reps') ? items.find((i) => i.key === sheet.key) : undefined;
   const sheetSuggestion = sheetItem ? suggestFor(sheetItem) : null;
 
   let workNumber = 0;
   return (
     <div className="card">
       <div className="exhead">
-        <strong>{exercise.name}</strong>
+        {nameButton}
         <span style={{ position: 'relative' }}>
           <button className="btn small" type="button" aria-label="종목 메뉴" onClick={() => setMenuOpen((v) => !v)}>⋮</button>
           {menuOpen && (
             <div className="menu" onClick={() => setMenuOpen(false)}>
               <button type="button" onClick={() => changeUnit(setting.unit === 'kg' ? 'lb' : 'kg')}>단위를 {setting.unit === 'kg' ? 'lbs' : 'kg'}로 바꾸기</button>
               {props.onDefer && !finished && <button type="button" onClick={props.onDefer}>나중에 하기</button>}
-              {finished && <button type="button" onClick={() => setOpen(false)}>접기</button>}
+              <button type="button" onClick={() => setCollapsed(true)}>접기</button>
             </div>
           )}
         </span>
@@ -166,7 +189,7 @@ export function ExerciseCard(props: Props) {
         placeholder="메모... (기구 세팅 등)"
         key={setting.note}
         defaultValue={setting.note}
-        onBlur={(e) => e.target.value !== setting.note && patchSetting(db, exercise.name, { note: e.target.value })}
+        onBlur={(e) => e.target.value !== setting.note && patchSetting(db, name, { note: e.target.value })}
       />
       <div className="setctl">
         <button type="button" aria-label="추가한 세트 지우기" disabled={extras.length === 0} onClick={removeSet}>−</button>
@@ -197,8 +220,9 @@ export function ExerciseCard(props: Props) {
         );
       })}
 
+      {altSheet}
       {sheet?.kind === 'rest' && (
-        <RestSheet value={setting.restSeconds} onChange={(s) => patchSetting(db, exercise.name, { restSeconds: s })} onClose={() => setSheet(null)} />
+        <RestSheet value={setting.restSeconds} onChange={(s) => patchSetting(db, name, { restSeconds: s })} onClose={() => setSheet(null)} />
       )}
       {sheet?.kind === 'weight' && sheetItem && (
         <WeightSheet

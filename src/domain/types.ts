@@ -10,6 +10,7 @@ export interface PrescriptionRow {
 export interface ProgramExercise {
   name: string;
   rows: PrescriptionRow[];
+  alternatives?: string[]; // 엑셀 드롭다운의 대체 운동
 }
 
 export interface Cardio {
@@ -90,6 +91,7 @@ export interface DayLog {
   optionChoices: number[];
   note: string;
   deferred: number[]; // "나중에 하기"로 미룬 종목의 exerciseIndex, 미룬 순서
+  substitutions?: Record<string, string>; // exerciseIndex → 그날 대신 한 종목 이름
 }
 
 export interface BodyLog {

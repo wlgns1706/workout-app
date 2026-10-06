@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { db } from '../../db/db';
 import { addFood, copyMeal, deleteFavorite, deleteFood, saveFavorite, updateFood } from '../../db/dietRepo';
 import { addDays } from '../../domain/date';
@@ -41,6 +41,7 @@ export function FoodSheet({ date, meal, editing, favorites, canCopy, onClose }: 
   const [manage, setManage] = useState(false);
   const [favoriteId, setFavoriteId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
 
   function read(): { name: string } & Nutrients {
     const trimmed = name.trim();
@@ -88,6 +89,16 @@ export function FoodSheet({ date, meal, editing, favorites, canCopy, onClose }: 
     onClose();
   }
 
+  /** 자주 먹는 음식을 아래 입력 칸으로 불러온다. 고른 양(×)을 곱해서 채운다. */
+  function loadFavorite(f: FavoriteFood) {
+    const scaled = scaleFood(f, factor);
+    setFavoriteId(null);
+    setName(scaled.name);
+    setTexts(toTexts(scaled));
+    setError(null);
+    setTimeout(() => nameRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 0);
+  }
+
   function editFavorite(f: FavoriteFood) {
     setFavoriteId(f.id);
     setName(f.name);
@@ -112,11 +123,11 @@ export function FoodSheet({ date, meal, editing, favorites, canCopy, onClose }: 
           {favorites.length === 0 && <p className="muted">아직 없습니다. 아래에서 음식을 넣을 때 "자주 먹는 음식으로 저장"을 체크하세요.</p>}
           {favorites.map((f) => (
             <div key={f.id} className="row between" style={{ borderTop: '1px dashed var(--border)', padding: '6px 0' }}>
-              <span>
+              <button type="button" className="favname" onClick={() => loadFavorite(f)} aria-label={`${f.name} 불러오기`}>
                 {f.name}
                 <br />
-                <small className="muted">{f.kcal}kcal · P{f.protein} C{f.carbs} F{f.fat}</small>
-              </span>
+                <small className="muted">{f.kcal}kcal · P{f.protein} C{f.carbs} F{f.fat} · 눌러서 불러오기</small>
+              </button>
               {manage ? (
                 <span className="row">
                   <button type="button" className="btn small" onClick={() => editFavorite(f)}>수정</button>
@@ -136,7 +147,7 @@ export function FoodSheet({ date, meal, editing, favorites, canCopy, onClose }: 
       {error && <div className="error" role="alert">{error}</div>}
       <label className="field">
         <span>이름</span>
-        <input type="text" value={name} onChange={(e) => setName(e.target.value)} style={{ width: '100%' }} />
+        <input ref={nameRef} type="text" value={name} onChange={(e) => setName(e.target.value)} style={{ width: '100%' }} />
       </label>
       {FIELDS.map((f) => (
         <label className="field" key={f.key}>

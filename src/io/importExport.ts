@@ -67,6 +67,9 @@ function checkProgram(data: Obj): Program {
         }
         for (const exercise of day.exercises as unknown[]) {
           if (!isObj(exercise) || !isStr(exercise.name) || !Array.isArray(exercise.rows)) fail('프로그램 파일의 종목 구조가 잘못됐습니다.');
+          if (exercise.alternatives !== undefined && (!Array.isArray(exercise.alternatives) || !exercise.alternatives.every(isStr))) {
+            fail('프로그램 파일의 대체 운동 목록이 잘못됐습니다.');
+          }
           for (const row of exercise.rows as unknown[]) {
             if (!isObj(row) || !Number.isInteger(row.sets) || (row.sets as number) < 1 || typeof row.reps !== 'string') {
               fail('프로그램 파일의 세트 구조가 잘못됐습니다.');

@@ -4,13 +4,14 @@ import { Link } from 'react-router-dom';
 import { db } from '../../db/db';
 import { emptyBodyLog, getMeta } from '../../db/repo';
 import { diffDays, todayStr } from '../../domain/date';
-import { firstAverage, goalProgress, recentPR, remainingToday, WEDDING_DATE, weightStreak, workoutDates } from '../../domain/home';
+import { firstAverage, goalProgress, recentPR, remainingToday, WEDDING_DATE, weekWorkoutProgress, weightStreak, workoutDates } from '../../domain/home';
 import { dietDayStatus, sumNutrients, targetOn, type DietDay } from '../../domain/nutrition';
 import { dayStatus, nextDayNo } from '../../domain/progress';
 import { getWeek, positionOn, totalWeeks } from '../../domain/schedule';
 import type { FoodEntry, Nutrients } from '../../domain/types';
 import { parseNumber } from '../../domain/units';
 import { avg7, weightByDate } from '../../domain/weightTrend';
+import { Ring } from '../../ui/Ring';
 import { TimeChart } from '../../ui/TimeChart';
 import { TrendSummary } from '../body/TrendSummary';
 import { useActive } from '../useActive';
@@ -85,6 +86,10 @@ export default function HomePage() {
   const measureDue = !data.lastMeasure || diffDays(data.lastMeasure.date, today) >= 7;
   const pr = program ? recentPR(program.rpeChart, data.setLogs, today) : null;
   const dDay = diffDays(today, WEDDING_DATE);
+  const weekProgress = week && !week.rest ? weekWorkoutProgress(week.days.filter((d) => !d.optional).map((d) => d.dayNo), statusOf) : null;
+  const goalPct = start && nowAvg != null && goalMax != null ? goalProgress(start.value, nowAvg, goalMax) : null;
+  const kcalRatio = todayTarget ? todayTotals.kcal / todayTarget.kcal.base : 0;
+  const kcalOver = todayTarget != null && todayTotals.kcal > todayTarget.kcal.max;
 
   async function saveWeight() {
     const v = parseNumber(weightText);
@@ -110,7 +115,12 @@ export default function HomePage() {
 
       {/* ① 디데이 */}
       <div className="hero">
-        {dDay >= 0 && <div className="dday">결혼식까지 {dDay === 0 ? 'D-DAY' : `D-${dDay}`}</div>}
+        {dDay >= 0 && (
+          <>
+            <div className="muted">결혼식까지</div>
+            <div className="dday">{dDay === 0 ? 'D-DAY' : `D-${dDay}`}</div>
+          </>
+        )}
         {plan && position && (
           <div className="muted">
             {position.status === 'active' && `${totalWeeks(plan)}주 중 ${position.planWeek + 1}주차 · 블록 ${position.block}${position.occurrence > 1 ? ` (${position.occurrence}회차)` : ''} · ${position.week}주차`}
@@ -118,6 +128,30 @@ export default function HomePage() {
             {position.status === 'finished' && '운동 일정이 끝났어요.'}
           </div>
         )}
+      </div>
+
+      {/* 링 대시보드 */}
+      <div className="rings">
+        <Link to="/body" className="ring">
+          <Ring value={(goalPct ?? 0) / 100} center={goalPct != null ? `${goalPct}%` : '—'} label="목표 체중" sub={goalMin != null && goalMax != null ? `${goalMin}~${goalMax}kg` : '설정 필요'} />
+        </Link>
+        <Link to="/diet" className="ring">
+          <Ring
+            value={kcalRatio}
+            center={todayTarget ? `${Math.round(kcalRatio * 100)}%` : '—'}
+            label="오늘 칼로리"
+            sub={todayTarget ? `${Math.round(todayTotals.kcal).toLocaleString()}/${todayTarget.kcal.base.toLocaleString()}` : '목표 필요'}
+            color={kcalOver ? 'var(--hot)' : 'var(--accent)'}
+          />
+        </Link>
+        <Link to="/schedule" className="ring">
+          <Ring
+            value={weekProgress && weekProgress.total > 0 ? weekProgress.done / weekProgress.total : 0}
+            center={weekProgress ? `${weekProgress.done}/${weekProgress.total}` : '—'}
+            label="이번 주 운동"
+            sub={week?.rest ? '완전 휴식' : weekProgress ? '정규 요일' : '일정 없음'}
+          />
+        </Link>
       </div>
 
       {/* ② 오늘 할 일 */}

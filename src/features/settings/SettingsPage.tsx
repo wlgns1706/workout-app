@@ -198,9 +198,9 @@ export default function SettingsPage() {
         <label className="field">
           <span>화면 테마</span>
           <select value={theme} onChange={(e) => changeTheme(e.target.value as ThemePref)}>
-            <option value="system">폰 설정 따라가기</option>
+            <option value="dark">다크 (기본)</option>
             <option value="light">라이트</option>
-            <option value="dark">다크</option>
+            <option value="system">폰 설정 따라가기</option>
           </select>
         </label>
       </div>

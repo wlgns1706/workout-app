@@ -235,3 +235,16 @@ describe('백업 버전 2', () => {
     expect(() => parseImport(JSON.stringify(v3))).toThrow(/버전/);
   });
 });
+
+describe('대체 운동', () => {
+  test('대체 운동 목록이 있는 프로그램을 받아들인다', () => {
+    const p = makeTestProgram();
+    p.blocks[0].weeks[0].days[0].exercises[0].alternatives = ['운동X', '운동Y'];
+    expect(parseImport(JSON.stringify(p)).kind).toBe('program');
+  });
+  test('대체 운동 목록이 글자 배열이 아니면 거부한다', () => {
+    const p = makeTestProgram() as unknown as { blocks: { weeks: { days: { exercises: Record<string, unknown>[] }[] }[] }[] };
+    p.blocks[0].weeks[0].days[0].exercises[0].alternatives = 'x';
+    expect(() => parseImport(JSON.stringify(p))).toThrow(ImportError);
+  });
+});
