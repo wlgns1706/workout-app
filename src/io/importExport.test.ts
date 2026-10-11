@@ -11,6 +11,7 @@ import {
   backupFileName,
   backupSummary,
   exportBackup,
+  alternativeCount,
   ImportError,
   parseImport,
   type BackupFile,
@@ -246,5 +247,29 @@ describe('대체 운동', () => {
     const p = makeTestProgram() as unknown as { blocks: { weeks: { days: { exercises: Record<string, unknown>[] }[] }[] }[] };
     p.blocks[0].weeks[0].days[0].exercises[0].alternatives = 'x';
     expect(() => parseImport(JSON.stringify(p))).toThrow(ImportError);
+  });
+});
+
+describe('프로그램 묶음 파일', () => {
+  test('여러 프로그램을 한 파일로 가져온다', () => {
+    const a = makeTestProgram();
+    const b = { ...makeTestProgram(), id: 'test-2', name: '두 번째' };
+    const parsed = parseImport(JSON.stringify({ type: 'workout-programs', formatVersion: 1, programs: [a, b] }));
+    expect(parsed.kind).toBe('programs');
+    if (parsed.kind === 'programs') expect(parsed.programs.map((p) => p.id)).toEqual(['test-program', 'test-2']);
+  });
+  test('비었거나 잘못된 프로그램이 섞이면 거부한다', () => {
+    expect(() => parseImport(JSON.stringify({ type: 'workout-programs', formatVersion: 1, programs: [] }))).toThrow(ImportError);
+    const bad = { ...makeTestProgram(), blocks: [] };
+    expect(() => parseImport(JSON.stringify({ type: 'workout-programs', formatVersion: 1, programs: [makeTestProgram(), bad] }))).toThrow(ImportError);
+  });
+});
+
+describe('alternativeCount', () => {
+  test('대체 운동이 있는 종목 수', () => {
+    const p = makeTestProgram();
+    expect(alternativeCount(p)).toBe(0);
+    p.blocks[0].weeks[0].days[0].exercises[0].alternatives = ['운동X'];
+    expect(alternativeCount(p)).toBe(1);
   });
 });

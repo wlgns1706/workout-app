@@ -38,7 +38,10 @@ export interface BackupFile {
   bodyMeasurements: BodyMeasurement[];
 }
 
-export type Parsed = { kind: 'program'; program: Program } | { kind: 'backup'; backup: BackupFile };
+export type Parsed =
+  | { kind: 'program'; program: Program }
+  | { kind: 'programs'; programs: Program[] }
+  | { kind: 'backup'; backup: BackupFile };
 
 type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -129,6 +132,11 @@ export function parseImport(text: string): Parsed {
   if (!isObj(data)) fail('이 앱의 파일이 아닙니다.');
   if (data.type === 'workout-program') return { kind: 'program', program: checkProgram(data) };
   if (data.type === 'workout-backup') return { kind: 'backup', backup: checkBackup(data) };
+  if (data.type === 'workout-programs') {
+    checkVersion(data, PROGRAM_FORMAT_VERSION);
+    if (!Array.isArray(data.programs) || data.programs.length === 0) fail('프로그램 묶음 파일에 프로그램이 없습니다.');
+    return { kind: 'programs', programs: (data.programs as unknown[]).map((p) => (isObj(p) ? checkProgram(p) : fail('프로그램 묶음 파일이 손상됐습니다.'))) };
+  }
   fail('이 앱의 파일이 아닙니다. 프로그램 파일이나 백업 파일(.json)을 골라 주세요.');
 }
 
@@ -168,6 +176,11 @@ export async function applyBackup(db: AppDB, backup: BackupFile): Promise<void> 
     await db.nutritionTargets.bulkPut(backup.nutritionTargets);
     await db.bodyMeasurements.bulkPut(backup.bodyMeasurements);
   });
+}
+
+/** 대체 운동 목록이 있는 종목 수. 0이면 대체 운동이 없는 예전 프로그램 파일이다. */
+export function alternativeCount(program: Program): number {
+  return program.blocks.flatMap((b) => b.weeks.flatMap((w) => w.days.flatMap((d) => d.exercises))).filter((e) => (e.alternatives?.length ?? 0) > 0).length;
 }
 
 export async function applyProgram(db: AppDB, program: Program): Promise<void> {

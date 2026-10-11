@@ -107,11 +107,16 @@ export function RestSheet({ value, onChange, onClose }: { value: number; onChang
   );
 }
 
-export function AltSheet({ original, options, current, onPick, onClose }: { original: string; options: string[]; current: string; onPick(name: string): void; onClose(): void }) {
+export function AltSheet({ original, options, current, legacy, onPick, onClose }: { original: string; options: string[]; current: string; legacy: boolean; onPick(name: string): void; onClose(): void }) {
   const all = [original, ...options.filter((o) => o !== original)];
   return (
     <Sheet title="대체 운동 고르기" onClose={onClose} closeLabel="닫기">
-      {options.length === 0 && <p className="muted">이 종목에는 엑셀에 정해진 대체 운동이 없습니다.</p>}
+      {options.length === 0 &&
+        (legacy ? (
+          <div className="error">지금 폰의 프로그램 파일은 대체 운동 목록이 없는 예전 파일입니다. 설정 → "프로그램 또는 백업 파일 가져오기"에서 새 프로그램 파일을 다시 가져오세요.</div>
+        ) : (
+          <p className="muted">이 종목에는 엑셀에 정해진 대체 운동이 없습니다.</p>
+        ))}
       <div className="altlist">
         {all.map((n) => (
           <button key={n} type="button" aria-pressed={n === current} onClick={() => onPick(n)}>

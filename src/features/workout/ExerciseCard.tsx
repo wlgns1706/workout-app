@@ -9,6 +9,7 @@ import type { Plan, Program, ProgramExercise, SetLog, Unit } from '../../domain/
 import { fromKg, roundTo, toKg } from '../../domain/units';
 import { useTimer } from '../../ui/timer';
 import { formatClock } from '../../ui/timerMath';
+import { alternativeCount } from '../../io/importExport';
 import { AltSheet, RepsSheet, RestSheet, WeightSheet } from './sheets';
 import { SetRow } from './SetRow';
 
@@ -138,7 +139,7 @@ export function ExerciseCard(props: Props) {
     </button>
   );
   const altSheet = sheet?.kind === 'alt' && (
-    <AltSheet original={exercise.name} options={exercise.alternatives ?? []} current={name} onPick={chooseAlternative} onClose={() => setSheet(null)} />
+    <AltSheet original={exercise.name} options={exercise.alternatives ?? []} current={name} legacy={alternativeCount(props.program) === 0} onPick={chooseAlternative} onClose={() => setSheet(null)} />
   );
 
   if (collapsed) {

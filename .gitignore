@@ -30,3 +30,4 @@ programs/
 workout-backup-*.json
 
 .superpowers/
+*.bundle.json

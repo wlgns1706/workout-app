@@ -10,6 +10,7 @@ import { NutritionTargets } from './NutritionTargets';
 import { shareOrDownload } from '../../io/share';
 import { applyTheme, loadTheme, type ThemePref } from '../../ui/theme';
 import {
+  alternativeCount,
   applyBackup,
   applyProgram,
   backupFileName,
@@ -44,6 +45,13 @@ export default function SettingsPage() {
     setMessage(null);
     try {
       const parsed = parseImport(await file.text());
+      if (parsed.kind === 'programs') {
+        const names = parsed.programs.map((p) => p.name).join(', ');
+        if (!window.confirm(`프로그램 ${parsed.programs.length}개를 가져옵니다: ${names}\n같은 프로그램이 있으면 새 파일로 바꿉니다. 기록은 그대로 남습니다.`)) return;
+        await db.programs.bulkPut(parsed.programs);
+        setMessage({ kind: 'ok', text: `프로그램 ${parsed.programs.length}개를 가져왔습니다. "새 일정 만들기"에서 고를 수 있습니다.` });
+        return;
+      }
       if (parsed.kind === 'backup') {
         setPending(parsed.backup);
         return;
@@ -114,7 +122,14 @@ export default function SettingsPage() {
         {programs.length === 0 ? (
           <p className="muted">가져온 프로그램이 없습니다. 프로그램 파일(.json)을 가져오세요.</p>
         ) : (
-          <ul>{programs.map((p) => <li key={p.id}>{p.name}</li>)}</ul>
+          <ul>
+            {programs.map((p) => (
+              <li key={p.id}>
+                {p.name}{' '}
+                <span className="muted">{alternativeCount(p) > 0 ? '· 대체 운동 포함' : '· 예전 파일 (대체 운동 없음, 다시 가져오세요)'}</span>
+              </li>
+            ))}
+          </ul>
         )}
         <label className="btn block">
           프로그램 또는 백업 파일 가져오기
