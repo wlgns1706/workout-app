@@ -4,7 +4,7 @@ import { db } from '../db/db';
 import { earliestRecordAt, getMeta, META_LAST_BACKUP } from '../db/repo';
 import { daysSinceBackup, shouldRemindBackup } from '../domain/backupReminder';
 import { localDateOf, todayStr } from '../domain/date';
-import { runBackup } from '../io/importExport';
+import { exportBackup, runBackup } from '../io/importExport';
 import { shareOrDownload } from '../io/share';
 
 export interface BackupStatus {
@@ -37,12 +37,15 @@ export function backupAgeText(status: BackupStatus): string {
 /** 누르면 바로 공유 창을 띄워 백업한다. */
 export function BackupButton({ label = '지금 백업', className = 'btn small primary' }: { label?: string; className?: string }) {
   const [message, setMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
+  // 백업 파일을 미리 만들어 둔다. 누르는 즉시 공유 창을 열어야 크롬이 막지 않는다.
+  const prepared = useLiveQuery(() => exportBackup(db), []);
   async function backup() {
     try {
-      const result = await runBackup(db, shareOrDownload);
-      if (result === 'shared') setMessage({ kind: 'ok', text: '백업 파일을 보냈습니다.' });
-      if (result === 'downloaded') setMessage({ kind: 'ok', text: '백업 파일을 다운로드 폴더에 저장했습니다. (내 파일 → 다운로드)' });
-      if (result === 'cancelled') setMessage(null);
+      const result = await runBackup(db, shareOrDownload, new Date(), prepared);
+      if (result.kind === 'shared') setMessage({ kind: 'ok', text: '백업 파일을 보냈습니다.' });
+      if (result.kind === 'downloaded')
+        setMessage({ kind: 'ok', text: `공유 창을 열 수 없어 다운로드 폴더에 저장했습니다. (내 파일 → 다운로드) 이유: ${result.reason} · 버전 ${__APP_VERSION__}` });
+      if (result.kind === 'cancelled') setMessage(null);
     } catch {
       setMessage({ kind: 'error', text: '백업 파일을 만들지 못했습니다.' });
     }

@@ -1,5 +1,6 @@
 import type { AppDB } from '../db/db';
 import { META_LAST_BACKUP } from '../db/repo';
+import type { ShareResult } from './share';
 import { localDateOf, todayStr } from '../domain/date';
 import type {
   BodyLog,
@@ -208,15 +209,17 @@ export function backupFileName(now: Date = new Date()): string {
   return `workout-backup-${todayStr(now)}.json`;
 }
 
-export type BackupResult = 'shared' | 'downloaded' | 'cancelled';
-
-/** 백업 파일을 만들어 보낸다. 실제로 보내거나 저장했을 때만 마지막 백업 시각을 남긴다. */
+/**
+ * 백업 파일을 보낸다. 실제로 보내거나 저장했을 때만 마지막 백업 시각을 남긴다.
+ * prepared: 미리 만들어 둔 백업. 크롬은 버튼을 누른 직후에만 공유 창을 열어 주므로, 누른 뒤에 파일을 만들면 늦을 수 있다.
+ */
 export async function runBackup(
   db: AppDB,
-  send: (fileName: string, data: unknown) => Promise<BackupResult>,
+  send: (fileName: string, data: unknown) => Promise<ShareResult>,
   now: Date = new Date(),
-): Promise<BackupResult> {
-  const result = await send(backupFileName(now), await exportBackup(db, now));
-  if (result !== 'cancelled') await db.meta.put({ key: META_LAST_BACKUP, value: now.toISOString() });
+  prepared?: BackupFile,
+): Promise<ShareResult> {
+  const result = await send(backupFileName(now), prepared ?? (await exportBackup(db, now)));
+  if (result.kind !== 'cancelled') await db.meta.put({ key: META_LAST_BACKUP, value: now.toISOString() });
   return result;
 }

@@ -96,12 +96,20 @@ describe('백업 왕복', () => {
   test('runBackup: 보내거나 저장하면 마지막 백업 시각을 기록하고, 공유 창을 닫으면 기록하지 않는다', async () => {
     await seed(db);
     const now = new Date('2026-10-20T09:00:00.000Z');
-    expect(await runBackup(db, async () => 'cancelled', now)).toBe('cancelled');
+    expect(await runBackup(db, async () => ({ kind: 'cancelled' }), now)).toEqual({ kind: 'cancelled' });
     expect((await db.meta.get('lastBackupAt'))?.value).toBe('2026-10-06T00:00:00.000Z');
     let sentName = '';
-    expect(await runBackup(db, async (name) => { sentName = name; return 'shared'; }, now)).toBe('shared');
+    expect(await runBackup(db, async (name) => { sentName = name; return { kind: 'shared' }; }, now)).toEqual({ kind: 'shared' });
     expect(sentName).toBe('workout-backup-2026-10-20.json');
     expect((await db.meta.get('lastBackupAt'))?.value).toBe(now.toISOString());
+  });
+  test('runBackup: 미리 만든 백업이 있으면 그것을 보낸다', async () => {
+    await seed(db);
+    const prepared = await exportBackup(db, new Date('2026-10-19T00:00:00.000Z'));
+    let sent: unknown = null;
+    await runBackup(db, async (_name, data) => { sent = data; return { kind: 'downloaded', reason: 'x' }; }, new Date('2026-10-20T09:00:00.000Z'), prepared);
+    expect(sent).toBe(prepared);
+    expect((await db.meta.get('lastBackupAt'))?.value).toBe('2026-10-20T09:00:00.000Z');
   });
 });
 
