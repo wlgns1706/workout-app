@@ -31,7 +31,7 @@ export function DayFooter({ plan, planWeek, day, dayLog, missing }: DayViewProps
     const now = new Date().toISOString();
     await patch({ finishedAt: now, startedAt: dayLog?.startedAt ?? now });
     if (missing > 0) window.alert(`기록하지 않은 세트가 ${missing}개 있어요. 남은 운동은 D5나 D6에서 이어서 할 수 있어요.`);
-    navigate('/');
+    navigate('/workout');
   }
 
   return (

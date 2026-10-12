@@ -3,7 +3,7 @@ import { formatKg, toKg } from '../../domain/units';
 
 interface Props {
   number: string; // 본 세트 번호
-  prescription: string | null; // 예: "8~12회 @7". 추가한 세트는 null
+  prescription: string | null; // 처방 줄이 여러 개일 때의 "8~12회 · RPE 7", 추가한 세트는 "추가 세트", 그 밖에는 null
   log: SetLog | undefined;
   unit: Unit;
   suggestedWeight: number | null;

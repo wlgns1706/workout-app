@@ -7,6 +7,7 @@ import { diffDays, todayStr } from '../../domain/date';
 import { firstAverage, goalProgress, recentPR, remainingToday, WEDDING_DATE, weekWorkoutProgress, weightStreak, workoutDates } from '../../domain/home';
 import { dietDayStatus, sumNutrients, targetOn, type DietDay } from '../../domain/nutrition';
 import { dayStatus, nextDayNo } from '../../domain/progress';
+import { weekLabel, weekRpe } from '../../domain/labels';
 import { getWeek, positionOn, totalWeeks } from '../../domain/schedule';
 import type { FoodEntry, Nutrients } from '../../domain/types';
 import { parseNumber } from '../../domain/units';
@@ -115,6 +116,7 @@ export default function HomePage() {
 
       {/* ① 디데이 */}
       <div className="hero">
+        <Link className="btn small gear" to="/settings" aria-label="설정">⚙ 설정</Link>
         {dDay >= 0 && (
           <>
             <div className="muted">결혼식까지</div>
@@ -123,7 +125,7 @@ export default function HomePage() {
         )}
         {plan && position && (
           <div className="muted">
-            {position.status === 'active' && `${totalWeeks(plan)}주 중 ${position.planWeek + 1}주차 · 블록 ${position.block}${position.occurrence > 1 ? ` (${position.occurrence}회차)` : ''} · ${position.week}주차`}
+            {position.status === 'active' && weekLabel(position, totalWeeks(plan), week ? weekRpe(week) : null)}
             {position.status === 'before' && `${plan.startDate}에 시작합니다. ${position.daysUntil}일 남았어요.`}
             {position.status === 'finished' && '운동 일정이 끝났어요.'}
           </div>

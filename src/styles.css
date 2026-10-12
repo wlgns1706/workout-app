@@ -215,3 +215,21 @@ input[type="text"], input[type="date"], input[type="number"], select, textarea {
 .ring { display: flex; flex-direction: column; align-items: center; gap: 2px; background: var(--surface); border-radius: 18px; padding: 12px 4px; text-decoration: none; color: var(--text); }
 .ring .rlabel { font-size: 0.75rem; font-weight: 700; }
 .ring .rsub { font-size: 0.7rem; color: var(--muted); }
+
+/* 운동 탭, 목표 줄, 누르기 쉬운 크기(44px 이상) */
+.hero { position: relative; }
+.hero .gear { position: absolute; top: 0; right: 0; }
+.big-start { min-height: 56px; font-size: 1.05rem; }
+.exrx { color: var(--accent); font-weight: 700; font-size: 0.95rem; margin: 2px 0 0; }
+.btn.small { min-height: 44px; min-width: 44px; }
+.exname { min-height: 44px; padding: 8px 0; }
+.exmeta button { min-height: 44px; padding: 4px 12px 4px 0; }
+.set2 { grid-template-columns: 48px 1fr 1fr 52px; }
+.set2 .num { width: 44px; height: 44px; }
+.set2 .val { min-height: 48px; }
+.datebtn, .favname { min-height: 44px; }
+.food { min-height: 44px; align-items: center; }
+.segment button, .sheet .choices button, .stepper button { min-height: 44px; }
+input[type="text"], input[type="date"], input[type="number"], select { min-height: 44px; }
+/* 글 속 링크: 줄 간격은 그대로 두고 누르는 영역만 위아래로 넓힌다 */
+main a:not([class]) { padding: 11px 0; }

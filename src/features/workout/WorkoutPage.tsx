@@ -3,7 +3,8 @@ import { Link, useParams } from 'react-router-dom';
 import { db } from '../../db/db';
 import { patchDayLog, weekLogs } from '../../db/repo';
 import { dayLogId, exerciseDone, slotId, slotsForExercise } from '../../domain/progress';
-import { getWeek, weekInfo } from '../../domain/schedule';
+import { weekLabel, weekRpe } from '../../domain/labels';
+import { getWeek, totalWeeks, weekInfo } from '../../domain/schedule';
 import { useWakeLock } from '../../ui/useWakeLock';
 import { useActive } from '../useActive';
 import { DayFooter, markStarted, type DayViewProps } from './dayShared';
@@ -48,9 +49,9 @@ function WorkoutView({ planWeek, dayNo }: { planWeek: number; dayNo: number }) {
     <main className="page">
       <div className="row between">
         <h1>D{dayNo}{day.optional && ' (선택)'}</h1>
-        <Link className="btn small" to="/">닫기</Link>
+        <Link className="btn small" to="/workout">닫기</Link>
       </div>
-      <p className="muted">{planWeek + 1}주차 · 블록 {info.block} · {info.week}주차</p>
+      <p className="muted">{weekLabel(info, totalWeeks(plan), weekRpe(week))}</p>
       {week.rest ? (
         <p className="muted">이번 주는 완전 휴식입니다.</p>
       ) : day.optional ? (

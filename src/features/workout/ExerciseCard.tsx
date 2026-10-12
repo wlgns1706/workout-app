@@ -4,6 +4,7 @@ import { db } from '../../db/db';
 import { defaultSetting, deleteSetLog, exerciseHistory, patchDayLog, patchSetting, saveSetLog } from '../../db/repo';
 import { bestE1RM, formatSet, isPR, lastSession, prefill, type DayKey, type Prefill } from '../../domain/e1rm';
 import { autofillPatch, dayLogId, exerciseDone, exerciseNameFor, newSetLog, nextSetType, slotsForExercise } from '../../domain/progress';
+import { prescriptionText, repsText } from '../../domain/labels';
 import { defaultReps } from '../../domain/reps';
 import type { Plan, Program, ProgramExercise, SetLog, Unit } from '../../domain/types';
 import { fromKg, roundTo, toKg } from '../../domain/units';
@@ -159,6 +160,8 @@ export function ExerciseCard(props: Props) {
   const sheetItem = sheet && (sheet.kind === 'weight' || sheet.kind === 'reps') ? items.find((i) => i.key === sheet.key) : undefined;
   const sheetSuggestion = sheetItem ? suggestFor(sheetItem) : null;
 
+  // 처방 줄이 하나면 위의 목표 줄로 충분하다. 여러 줄일 때만 세트마다 처방을 적는다.
+  const mixed = exercise.rows.length > 1;
   let workNumber = 0;
   return (
     <div className="card">
@@ -175,6 +178,7 @@ export function ExerciseCard(props: Props) {
           )}
         </span>
       </div>
+      <div className="exrx">{prescriptionText(exercise)}</div>
       <div className="exmeta">
         <button type="button" aria-label="휴식 시간 설정" onClick={() => setSheet({ kind: 'rest' })}>⏱ {formatClock(setting.restSeconds)}</button>
         {best != null && <span>e1RM {best.toFixed(1)}kg</span>}
@@ -207,7 +211,7 @@ export function ExerciseCard(props: Props) {
           <SetRow
             key={item.key}
             number={String(workNumber)}
-            prescription={item.repsText == null ? '추가 세트' : `${item.repsText}${/\d$/.test(item.repsText) ? '회' : ''}${item.rpe != null ? ` @${item.rpe}` : ''}`}
+            prescription={item.repsText == null ? '추가 세트' : mixed ? `${repsText(item.repsText)}${item.rpe != null ? ` · RPE ${item.rpe}` : ''}` : null}
             log={item.log}
             unit={unit}
             suggestedWeight={suggestion?.weight ?? null}
