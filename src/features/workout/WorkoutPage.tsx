@@ -97,7 +97,7 @@ function RegularDay(view: DayViewProps) {
           onChecked={() => markStarted(plan, planWeek, day.dayNo, dayLog)}
         />
       ))}
-      <DayFooter {...view} missing={missing} />
+      <DayFooter {...view} missing={missing} plannedSets={day.exercises.flatMap((ex, i) => slotsForExercise(ex, i)).length} />
     </>
   );
 }

@@ -1,21 +1,17 @@
-import { useLiveQuery } from 'dexie-react-hooks';
 import { useState, type ChangeEvent } from 'react';
 import { db } from '../../db/db';
-import { getMeta, META_LAST_BACKUP } from '../../db/repo';
 import { addDays, localDateOf, todayStr } from '../../domain/date';
 import { parseSequence, totalWeeks } from '../../domain/schedule';
 import { Link } from 'react-router-dom';
 import { GoalWeight } from './GoalWeight';
 import { NutritionTargets } from './NutritionTargets';
-import { shareOrDownload } from '../../io/share';
+import { BackupButton, backupAgeText, useBackupStatus } from '../../ui/backup';
 import { applyTheme, loadTheme, type ThemePref } from '../../ui/theme';
 import {
   alternativeCount,
   applyBackup,
   applyProgram,
-  backupFileName,
   backupSummary,
-  exportBackup,
   ImportError,
   parseImport,
   type BackupFile,
@@ -26,7 +22,8 @@ type Message = { kind: 'ok' | 'error'; text: string } | null;
 
 export default function SettingsPage() {
   const active = useActive();
-  const lastBackup = useLiveQuery(() => getMeta(db, META_LAST_BACKUP), []);
+  const backup = useBackupStatus();
+  const lastBackup = backup?.last ?? null;
   const [message, setMessage] = useState<Message>(null);
   const [pending, setPending] = useState<BackupFile | null>(null);
   const [programId, setProgramId] = useState('');
@@ -92,16 +89,6 @@ export default function SettingsPage() {
       createdAt: new Date().toISOString(),
     });
     setMessage({ kind: 'ok', text: '일정을 만들었습니다.' });
-  }
-
-  async function backup() {
-    try {
-      const result = await shareOrDownload(backupFileName(), await exportBackup(db));
-      if (result === 'shared') setMessage({ kind: 'ok', text: '백업 파일을 보냈습니다.' });
-      if (result === 'downloaded') setMessage({ kind: 'ok', text: '백업 파일을 다운로드 폴더에 저장했습니다. (내 파일 → 다운로드)' });
-    } catch {
-      setMessage({ kind: 'error', text: '백업 파일을 만들지 못했습니다.' });
-    }
   }
 
   function changeTheme(pref: ThemePref) {
@@ -198,8 +185,8 @@ export default function SettingsPage() {
 
       <h2>백업</h2>
       <div className="card">
-        <p className="muted">마지막 백업: {lastBackup ? localDateOf(lastBackup) : '없음'}</p>
-        <button className="btn primary block" onClick={backup}>백업 내보내기</button>
+        <p className="muted">마지막 백업: {lastBackup ? `${localDateOf(lastBackup)} (${backup ? backupAgeText(backup) : ''})` : '없음'}</p>
+        <BackupButton label="백업 내보내기" className="btn primary block" />
         <p className="muted">
           "백업 내보내기"를 누르면 공유 창이 뜹니다. 구글 드라이브나 카카오톡 "나에게 보내기"를 고르세요. 공유 창이 없는 환경에서는 다운로드 폴더(내 파일 → 다운로드)에 저장됩니다.
         </p>

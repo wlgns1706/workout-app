@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { db } from '../../db/db';
 import { addFood, copyMeal, deleteFavorite, deleteFood, saveFavorite, updateFood } from '../../db/dietRepo';
 import { addDays } from '../../domain/date';
+import { useUndo } from '../../ui/Undo';
 import { kcalFromMacros, MEALS, scaleFood } from '../../domain/nutrition';
 import type { FavoriteFood, FoodEntry, Meal, Nutrients } from '../../domain/types';
 import { parseNumber } from '../../domain/units';
@@ -35,6 +36,7 @@ const toTexts = (n?: Nutrients): Texts => ({
 export function FoodSheet({ date, meal, editing, favorites, canCopy, onClose }: Props) {
   const mealLabel = MEALS.find((m) => m.key === meal)?.label ?? '';
   const [factor, setFactor] = useState(1);
+  const showUndo = useUndo();
   const [name, setName] = useState(editing?.name ?? '');
   const [texts, setTexts] = useState<Texts>(toTexts(editing));
   const [keep, setKeep] = useState(false);
@@ -84,6 +86,17 @@ export function FoodSheet({ date, meal, editing, favorites, canCopy, onClose }: 
     onClose();
   }
 
+  async function removeFood(entry: FoodEntry) {
+    await deleteFood(db, entry.id);
+    onClose();
+    showUndo(`"${entry.name}" 삭제됨`, () => db.foodEntries.put(entry));
+  }
+
+  async function removeFavorite(food: FavoriteFood) {
+    await deleteFavorite(db, food.id);
+    showUndo(`자주 먹는 음식 "${food.name}" 삭제됨`, () => db.favoriteFoods.put(food));
+  }
+
   async function copyYesterday() {
     await copyMeal(db, addDays(date, -1), date, meal);
     onClose();
@@ -131,7 +144,7 @@ export function FoodSheet({ date, meal, editing, favorites, canCopy, onClose }: 
               {manage ? (
                 <span className="row">
                   <button type="button" className="btn small" onClick={() => editFavorite(f)}>수정</button>
-                  <button type="button" className="btn small" onClick={() => deleteFavorite(db, f.id)}>삭제</button>
+                  <button type="button" className="btn small" onClick={() => removeFavorite(f)}>삭제</button>
                 </span>
               ) : (
                 <button type="button" className="btn small primary" onClick={() => addFromFavorite(f)}>추가</button>
@@ -164,7 +177,7 @@ export function FoodSheet({ date, meal, editing, favorites, canCopy, onClose }: 
       <div className="row" style={{ marginTop: 8 }}>
         <button type="button" className="btn primary" onClick={submit}>{favoriteId ? '자주 먹는 음식 저장' : editing ? '수정' : '입력한 음식 추가'}</button>
         {editing && (
-          <button type="button" className="btn" onClick={async () => { await deleteFood(db, editing.id); onClose(); }}>삭제</button>
+          <button type="button" className="btn" onClick={() => removeFood(editing)}>삭제</button>
         )}
       </div>
     </Sheet>

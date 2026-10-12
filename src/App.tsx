@@ -10,6 +10,7 @@ import WorkoutHome from './features/workout/WorkoutHome';
 import WorkoutPage from './features/workout/WorkoutPage';
 import { Banners } from './ui/Banners';
 import { RestTimerBar, TimerProvider } from './ui/timer';
+import { UndoProvider } from './ui/Undo';
 
 // 설정은 홈 오른쪽 위 버튼으로 들어간다.
 const tabs = [
@@ -38,6 +39,7 @@ export default function App() {
   return (
     <HashRouter>
       <TimerProvider>
+        <UndoProvider>
         <Banners />
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -52,6 +54,7 @@ export default function App() {
         </Routes>
         <RestTimerBar />
         <TabBar />
+        </UndoProvider>
       </TimerProvider>
     </HashRouter>
   );

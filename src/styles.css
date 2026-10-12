@@ -233,3 +233,15 @@ input[type="text"], input[type="date"], input[type="number"], select, textarea {
 input[type="text"], input[type="date"], input[type="number"], select { min-height: 44px; }
 /* 글 속 링크: 줄 간격은 그대로 두고 누르는 영역만 위아래로 넓힌다 */
 main a:not([class]) { padding: 11px 0; }
+
+/* 운동 요약, 되돌리기 알림 */
+.sumgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px; }
+.sumgrid > div { background: var(--surface-2); border-radius: 14px; padding: 10px 6px; text-align: center; display: flex; flex-direction: column; }
+.sumgrid b { font-size: 1.4rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.sumgrid small { font-size: 0.75rem; color: var(--muted); }
+.sheet h4 { margin: 12px 0 4px; font-size: 0.85rem; color: var(--muted); }
+.sumlist { margin: 0; padding-left: 18px; }
+.up { color: var(--accent); }
+.toast { position: fixed; left: 8px; right: 8px; bottom: calc(64px + env(safe-area-inset-bottom)); z-index: 40; max-width: 504px; margin: 0 auto; background: var(--surface-2); color: var(--text); border: 1px solid var(--border); border-radius: 14px; padding: 6px 6px 6px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+.toast .btn { background: transparent; color: var(--accent); border: 0; font-weight: 700; }
+.banner .btn { white-space: nowrap; flex: 0 0 auto; }

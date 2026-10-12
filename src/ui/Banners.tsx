@@ -1,19 +1,15 @@
-import { useLiveQuery } from 'dexie-react-hooks';
-import { Link } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
-import { db } from '../db/db';
-import { earliestRecordAt, getMeta, META_LAST_BACKUP } from '../db/repo';
-import { shouldRemindBackup } from '../domain/backupReminder';
+import { BackupButton, backupAgeText, useBackupStatus } from './backup';
 
 export function Banners() {
   const {
     needRefresh: [needRefresh],
     updateServiceWorker,
   } = useRegisterSW();
-  const remind = useLiveQuery(async () => {
-    const [last, earliest] = await Promise.all([getMeta(db, META_LAST_BACKUP), earliestRecordAt(db)]);
-    return shouldRemindBackup(last, earliest, new Date());
-  }, []);
+  const backup = useBackupStatus();
+  // 홈에서는 "오늘 할 일"의 백업 줄이 같은 일을 한다.
+  const { pathname } = useLocation();
 
   return (
     <>
@@ -23,10 +19,10 @@ export function Banners() {
           <button className="btn small" onClick={() => updateServiceWorker(true)}>지금 갱신</button>
         </div>
       )}
-      {remind && (
+      {backup?.due && pathname !== '/' && (
         <div className="banner">
-          <span>백업한 지 7일이 지났어요.</span>
-          <Link className="btn small" to="/settings">백업하기</Link>
+          <span>{backupAgeText(backup)}. 폰을 잃어버리면 기록도 사라져요.</span>
+          <BackupButton className="btn small" />
         </div>
       )}
     </>

@@ -12,6 +12,7 @@ import { getWeek, positionOn, totalWeeks } from '../../domain/schedule';
 import type { FoodEntry, Nutrients } from '../../domain/types';
 import { parseNumber } from '../../domain/units';
 import { avg7, weightByDate } from '../../domain/weightTrend';
+import { BackupButton, backupAgeText, useBackupStatus } from '../../ui/backup';
 import { Ring } from '../../ui/Ring';
 import { TimeChart } from '../../ui/TimeChart';
 import { TrendSummary } from '../body/TrendSummary';
@@ -32,6 +33,7 @@ function Item({ done, children }: { done: boolean; children: React.ReactNode }) 
 
 export default function HomePage() {
   const active = useActive();
+  const backup = useBackupStatus();
   const today = todayStr();
   const [weightText, setWeightText] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -201,6 +203,16 @@ export default function HomePage() {
         {measureDue && (
           <Item done={false}>
             <strong>주간 측정</strong> <Link to="/body">인바디와 허리둘레를 잴 때예요 →</Link>
+          </Item>
+        )}
+        {backup && (backup.due || backup.today) && (
+          <Item done={backup.today}>
+            <strong>백업</strong> <span className="muted">{backupAgeText(backup)}</span>
+            {!backup.today && (
+              <div className="row" style={{ marginTop: 4 }}>
+                <BackupButton />
+              </div>
+            )}
           </Item>
         )}
       </div>

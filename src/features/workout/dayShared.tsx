@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../db/db';
 import { patchDayLog } from '../../db/repo';
 import type { DayLog, Plan, Program, ProgramDay, SetLog } from '../../domain/types';
+import { SummarySheet } from './SummarySheet';
 
 export interface DayViewProps {
   program: Program;
@@ -23,15 +25,21 @@ export function markStarted(plan: Plan, planWeek: number, dayNo: number, dayLog:
   if (!dayLog?.startedAt) void patchDayLog(db, plan.id, planWeek, dayNo, { startedAt: new Date().toISOString() });
 }
 
-export function DayFooter({ plan, planWeek, day, dayLog, missing }: DayViewProps & { missing: number }) {
+export function DayFooter({ program, plan, planWeek, day, dayLog, missing, plannedSets }: DayViewProps & { missing: number; plannedSets: number | null }) {
   const navigate = useNavigate();
+  // 'finish': 방금 완료해서 연 요약. 닫으면 운동 탭으로 간다. 'view': 다시 본 요약
+  const [summary, setSummary] = useState<'finish' | 'view' | null>(null);
   const patch = (p: Partial<DayLog>) => patchDayLog(db, plan.id, planWeek, day.dayNo, p);
 
   async function finish() {
     const now = new Date().toISOString();
     await patch({ finishedAt: now, startedAt: dayLog?.startedAt ?? now });
-    if (missing > 0) window.alert(`기록하지 않은 세트가 ${missing}개 있어요. 남은 운동은 D5나 D6에서 이어서 할 수 있어요.`);
-    navigate('/workout');
+    setSummary('finish');
+  }
+
+  function closeSummary() {
+    if (summary === 'finish') navigate('/workout');
+    setSummary(null);
   }
 
   return (
@@ -54,10 +62,23 @@ export function DayFooter({ plan, planWeek, day, dayLog, missing }: DayViewProps
       {dayLog?.finishedAt ? (
         <>
           <p className="ok">완료했어요{durationText(dayLog)}</p>
-          <button className="btn block" onClick={() => patch({ finishedAt: null })}>완료 취소</button>
+          <button className="btn block" onClick={() => setSummary('view')}>오늘 운동 요약 보기</button>
+          <button className="btn block" style={{ marginTop: 8 }} onClick={() => patch({ finishedAt: null })}>완료 취소</button>
         </>
       ) : (
         <button className="btn primary block" onClick={finish}>운동 완료</button>
+      )}
+      {summary && (
+        <SummarySheet
+          chart={program.rpeChart}
+          plan={plan}
+          planWeek={planWeek}
+          dayNo={day.dayNo}
+          dayLog={dayLog}
+          plannedSets={plannedSets}
+          missing={missing}
+          onClose={closeSummary}
+        />
       )}
     </div>
   );

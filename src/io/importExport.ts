@@ -142,7 +142,6 @@ export function parseImport(text: string): Parsed {
 
 export async function exportBackup(db: AppDB, now: Date = new Date()): Promise<BackupFile> {
   const exportedAt = now.toISOString();
-  await db.meta.put({ key: META_LAST_BACKUP, value: exportedAt });
   return {
     type: 'workout-backup',
     formatVersion: 2,
@@ -207,4 +206,17 @@ export function backupSummary(backup: BackupFile) {
 
 export function backupFileName(now: Date = new Date()): string {
   return `workout-backup-${todayStr(now)}.json`;
+}
+
+export type BackupResult = 'shared' | 'downloaded' | 'cancelled';
+
+/** 백업 파일을 만들어 보낸다. 실제로 보내거나 저장했을 때만 마지막 백업 시각을 남긴다. */
+export async function runBackup(
+  db: AppDB,
+  send: (fileName: string, data: unknown) => Promise<BackupResult>,
+  now: Date = new Date(),
+): Promise<BackupResult> {
+  const result = await send(backupFileName(now), await exportBackup(db, now));
+  if (result !== 'cancelled') await db.meta.put({ key: META_LAST_BACKUP, value: now.toISOString() });
+  return result;
 }

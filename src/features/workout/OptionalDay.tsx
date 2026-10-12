@@ -63,7 +63,7 @@ export function OptionalDay(view: DayViewProps) {
           </div>
         </>
       )}
-      <DayFooter {...view} missing={0} />
+      <DayFooter {...view} missing={0} plannedSets={null} />
     </>
   );
 }

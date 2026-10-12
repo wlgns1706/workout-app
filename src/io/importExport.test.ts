@@ -14,6 +14,7 @@ import {
   alternativeCount,
   ImportError,
   parseImport,
+  runBackup,
   type BackupFile,
 } from './importExport';
 
@@ -85,11 +86,21 @@ describe('백업 왕복', () => {
     await applyBackup(db, backup);
     expect((await db.bodyLogs.toArray()).map((b) => b.date)).toEqual(['2026-10-07']);
   });
-  test('내보내면 마지막 백업 시각을 기록한다', async () => {
+  test('내보내기만 해서는 마지막 백업 시각을 바꾸지 않는다', async () => {
     await seed(db);
     const now = new Date('2026-10-20T09:00:00.000Z');
     const backup = await exportBackup(db, now);
     expect(backup.exportedAt).toBe(now.toISOString());
+    expect((await db.meta.get('lastBackupAt'))?.value).toBe('2026-10-06T00:00:00.000Z');
+  });
+  test('runBackup: 보내거나 저장하면 마지막 백업 시각을 기록하고, 공유 창을 닫으면 기록하지 않는다', async () => {
+    await seed(db);
+    const now = new Date('2026-10-20T09:00:00.000Z');
+    expect(await runBackup(db, async () => 'cancelled', now)).toBe('cancelled');
+    expect((await db.meta.get('lastBackupAt'))?.value).toBe('2026-10-06T00:00:00.000Z');
+    let sentName = '';
+    expect(await runBackup(db, async (name) => { sentName = name; return 'shared'; }, now)).toBe('shared');
+    expect(sentName).toBe('workout-backup-2026-10-20.json');
     expect((await db.meta.get('lastBackupAt'))?.value).toBe(now.toISOString());
   });
 });
