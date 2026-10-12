@@ -29,4 +29,17 @@ describe('shareOrDownload', () => {
     const downloaded: string[] = [];
     expect(await shareOrDownload('b.json', {}, nav, (name) => downloaded.push(name))).toBe('downloaded');
   });
+  test('json 파일을 공유할 수 없는 폰(안드로이드 크롬)에서는 같은 내용을 txt 파일로 공유한다', async () => {
+    const shared: File[] = [];
+    const nav = {
+      canShare: (d: { files: File[] }) => d.files[0].type === 'text/plain',
+      share: async (d: { files: File[] }) => void shared.push(...d.files),
+    };
+    const downloaded: string[] = [];
+    expect(await shareOrDownload('b.json', { a: 1 }, nav, (name) => downloaded.push(name))).toBe('shared');
+    expect(shared[0].name).toBe('b.txt');
+    expect(shared[0].type).toBe('text/plain');
+    expect(JSON.parse(await shared[0].text())).toEqual({ a: 1 });
+    expect(downloaded).toEqual([]);
+  });
 });

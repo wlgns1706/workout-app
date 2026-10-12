@@ -12,10 +12,16 @@ export async function shareOrDownload(
   nav: ShareNavigator = navigator as ShareNavigator,
   download: (fileName: string, data: unknown) => void = downloadJson,
 ): Promise<'shared' | 'downloaded' | 'cancelled'> {
-  const file = new File([JSON.stringify(data)], fileName, { type: 'application/json' });
-  if (nav.share && nav.canShare?.({ files: [file] })) {
+  const text = JSON.stringify(data);
+  // 안드로이드 크롬은 json 파일 공유를 막는다. 그때는 같은 내용을 txt 파일로 보낸다(가져오기에서 txt도 고를 수 있다).
+  const candidates = [
+    new File([text], fileName, { type: 'application/json' }),
+    new File([text], fileName.replace(/\.json$/, '.txt'), { type: 'text/plain' }),
+  ];
+  const file = candidates.find((f) => nav.canShare?.({ files: [f] }));
+  if (nav.share && file) {
     try {
-      await nav.share({ files: [file], title: fileName });
+      await nav.share({ files: [file], title: file.name });
       return 'shared';
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') return 'cancelled';

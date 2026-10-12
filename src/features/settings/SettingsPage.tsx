@@ -121,7 +121,7 @@ export default function SettingsPage() {
         )}
         <label className="btn block">
           프로그램 또는 백업 파일 가져오기
-          <input type="file" accept=".json,application/json" hidden onChange={onFile} />
+          <input type="file" accept=".json,application/json,.txt,text/plain" hidden onChange={onFile} />
         </label>
       </div>
 
@@ -192,7 +192,7 @@ export default function SettingsPage() {
           "백업 내보내기"를 누르면 공유 창이 뜹니다. 구글 드라이브나 카카오톡 "나에게 보내기"를 고르세요. 공유 창이 없는 환경에서는 다운로드 폴더(내 파일 → 다운로드)에 저장됩니다.
         </p>
         <p className="muted">
-          복원할 때는 위의 "프로그램 또는 백업 파일 가져오기"를 누르고, 드라이브나 다운로드 폴더에서 <code>workout-backup-날짜.json</code> 파일을 고르세요.
+          복원할 때는 위의 "프로그램 또는 백업 파일 가져오기"를 누르고, 드라이브나 다운로드 폴더에서 <code>workout-backup-날짜.txt</code>(또는 .json) 파일을 고르세요.
         </p>
       </div>
 
