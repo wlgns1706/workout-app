@@ -21,3 +21,23 @@ export function timerCue(prev: number, now: number, total: number): TimerCue | n
   if (total > 30 && prev > 30 && now <= 30) return 'warn';
   return null;
 }
+
+/** 시각을 "14:32:10"처럼 쓴다. */
+export function clockTime(ms: number): string {
+  const d = new Date(ms);
+  return [d.getHours(), d.getMinutes(), d.getSeconds()].map((n) => String(n).padStart(2, '0')).join(':');
+}
+
+export interface RestNotice {
+  title: string;
+  body: string;
+  silent: boolean;
+  vibrate?: number[];
+}
+
+/** 다른 앱을 쓰는 동안 알림창에 띄울 휴식 타이머 내용 */
+export function restNotice(left: number, endAt: number, cue: TimerCue | null): RestNotice {
+  if (left <= 0 || cue === 'end') return { title: '휴식 끝! 다음 세트를 시작하세요', body: '누르면 앱으로 돌아갑니다', silent: false, vibrate: [400, 150, 400] };
+  const notice: RestNotice = { title: `휴식 ${formatClock(left)} 남음`, body: `${clockTime(endAt)}에 끝나요 · 누르면 앱으로 돌아갑니다`, silent: true };
+  return cue === 'warn' ? { ...notice, silent: false, vibrate: [200] } : notice;
+}

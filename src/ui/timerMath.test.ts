@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { formatClock, remainingSeconds, timerCue } from './timerMath';
+import { clockTime, formatClock, remainingSeconds, restNotice, timerCue } from './timerMath';
 
 describe('remainingSeconds', () => {
   test('남은 시간을 초 단위로 올림한다', () => {
@@ -37,5 +37,24 @@ describe('timerCue', () => {
     expect(timerCue(40, 3, 120)).toBe('tick');
     expect(timerCue(40, 0, 120)).toBe('end');
     expect(timerCue(50, 20, 120)).toBe('warn');
+  });
+});
+
+describe('clockTime', () => {
+  test('시:분:초', () => {
+    expect(clockTime(new Date(2026, 9, 12, 9, 5, 7).getTime())).toBe('09:05:07');
+  });
+});
+
+describe('restNotice', () => {
+  const endAt = new Date(2026, 9, 12, 14, 32, 10).getTime();
+  test('쉬는 중에는 소리 없이 남은 시간과 끝나는 시각', () => {
+    expect(restNotice(105, endAt, null)).toEqual({ title: '휴식 1:45 남음', body: '14:32:10에 끝나요 · 누르면 앱으로 돌아갑니다', silent: true });
+  });
+  test('30초 전에는 진동으로 한 번 알린다', () => {
+    expect(restNotice(30, endAt, 'warn')).toEqual({ title: '휴식 0:30 남음', body: '14:32:10에 끝나요 · 누르면 앱으로 돌아갑니다', silent: false, vibrate: [200] });
+  });
+  test('끝나면 길게 알린다', () => {
+    expect(restNotice(0, endAt, 'end')).toEqual({ title: '휴식 끝! 다음 세트를 시작하세요', body: '누르면 앱으로 돌아갑니다', silent: false, vibrate: [400, 150, 400] });
   });
 });

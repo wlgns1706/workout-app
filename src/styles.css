@@ -245,3 +245,7 @@ main a:not([class]) { padding: 11px 0; }
 .toast { position: fixed; left: 8px; right: 8px; bottom: calc(64px + env(safe-area-inset-bottom)); z-index: 40; max-width: 504px; margin: 0 auto; background: var(--surface-2); color: var(--text); border: 1px solid var(--border); border-radius: 14px; padding: 6px 6px 6px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
 .toast .btn { background: transparent; color: var(--accent); border: 0; font-weight: 700; }
 .banner .btn { white-space: nowrap; flex: 0 0 auto; }
+.timerbar { flex-wrap: wrap; }
+.timerask { flex: 1 1 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 0.85rem; border-top: 1px solid currentColor; padding-top: 6px; }
+.timerask .row { flex-wrap: nowrap; }
+.timerask .btn { white-space: nowrap; }

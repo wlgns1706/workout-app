@@ -5,6 +5,7 @@ import { parseSequence, totalWeeks } from '../../domain/schedule';
 import { Link } from 'react-router-dom';
 import { GoalWeight } from './GoalWeight';
 import { NutritionTargets } from './NutritionTargets';
+import { RestNotifySetting } from './RestNotifySetting';
 import { BackupButton, backupAgeText, useBackupStatus } from '../../ui/backup';
 import { applyTheme, loadTheme, type ThemePref } from '../../ui/theme';
 import {
@@ -193,6 +194,11 @@ export default function SettingsPage() {
         <p className="muted">
           복원할 때는 위의 "프로그램 또는 백업 파일 가져오기"를 누르고, 드라이브나 다운로드 폴더에서 <code>workout-backup-날짜.json</code> 파일을 고르세요.
         </p>
+      </div>
+
+      <h2>휴식 타이머</h2>
+      <div className="card">
+        <RestNotifySetting />
       </div>
 
       <h2>화면</h2>

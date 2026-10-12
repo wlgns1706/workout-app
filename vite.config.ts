@@ -27,7 +27,8 @@ export default defineConfig({
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
-      workbox: { globPatterns: ['**/*.{js,css,html,png}'] },
+      // notify-sw.js: 휴식 타이머 알림을 누르면 앱으로 돌아가게 한다.
+      workbox: { globPatterns: ['**/*.{js,css,html,png}'], importScripts: ['notify-sw.js'] },
     }),
   ],
   test: { environment: 'node', include: ['src/**/*.test.ts'] },
