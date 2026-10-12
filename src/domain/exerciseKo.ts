@@ -1,0 +1,92 @@
+// 엑셀 프로그램의 영어 종목 이름 → 한글 이름. 사전에 없으면 영어 이름만 보인다.
+const KO: Record<string, string> = {
+  'Adductor Machine': '내전근 머신',
+  'Assisted-Pull Up': '어시스트 풀업',
+  'Back Extension': '백 익스텐션',
+  'Barbell Curl': '바벨 컬',
+  'Barbell Shrug': '바벨 슈러그',
+  'Barbell Squat': '바벨 스쿼트',
+  'Behind Lat Pull Down': '비하인드 랫 풀다운',
+  'Behind Neck Press': '비하인드 넥 프레스',
+  'Bent Over Barbell Row': '벤트오버 바벨 로우',
+  'Bent Over Dumbell Row': '벤트오버 덤벨 로우',
+  'Bulgarian Split Squat': '불가리안 스플릿 스쿼트',
+  'Cable Push Down': '케이블 푸시다운',
+  'Chest Fly': '체스트 플라이',
+  'Chest Supported Row': '체스트 서포티드 로우',
+  'Conventional Deadlift': '컨벤셔널 데드리프트',
+  'Decline Press': '디클라인 프레스',
+  Dips: '딥스',
+  'Dumbell Curl': '덤벨 컬',
+  'Dumbell Shoulder Press': '덤벨 숄더 프레스',
+  'Dumbell Shrug': '덤벨 슈러그',
+  'Dumbell Side Lateral Raise': '덤벨 사이드 레터럴 레이즈',
+  'Face Pull': '페이스 풀',
+  'Flat Barbell Bench Press': '플랫 바벨 벤치프레스',
+  'Flat Dumbell Press': '플랫 덤벨 프레스',
+  'Flat Machine Press': '플랫 머신 프레스',
+  'Front Split Squat': '프론트 스플릿 스쿼트',
+  'Glute Machine': '글루트 머신',
+  'Good Morning': '굿모닝',
+  'Hack Squat': '핵 스쿼트',
+  'High Row': '하이 로우',
+  'Hip Thruster': '힙 쓰러스트',
+  'Incline Barbell Press': '인클라인 바벨 프레스',
+  'Incline Bench Curl': '인클라인 벤치 컬',
+  'Incline Dumbell Press': '인클라인 덤벨 프레스',
+  'Incline Machine Press': '인클라인 머신 프레스',
+  'Kneeling Extension': '닐링 익스텐션',
+  'Lat-Pull Down': '랫 풀다운',
+  'Leg Extension': '레그 익스텐션',
+  'Leg Press': '레그 프레스',
+  'Leg Raise': '레그 레이즈',
+  'Low Row': '로우 로우 머신',
+  'Lying Leg Curl': '라잉 레그 컬',
+  'Lying Triceps Extension': '라잉 트라이셉스 익스텐션',
+  'Machine Abs': '복근 머신',
+  'Machine Curl': '머신 컬',
+  'Machine Shoulder Press': '머신 숄더 프레스',
+  'Machine Side Lateral Raise': '머신 사이드 레터럴 레이즈',
+  'Nordic Curl': '노르딕 컬',
+  OHP: '오버헤드 프레스',
+  'One Leg Press': '원 레그 프레스',
+  'One-Arm Dumbell Row': '원암 덤벨 로우',
+  'One-Arm Machine Row': '원암 머신 로우',
+  'One-Leg Deadlift': '원 레그 데드리프트',
+  'Overhead Triceps Extension': '오버헤드 트라이셉스 익스텐션',
+  'Preacher Curl': '프리처 컬',
+  'Psoas March': '소아스 마치',
+  'Pull-Up': '풀업',
+  'Push-Up': '푸시업',
+  'Rear Delt Fly': '리어 델트 플라이',
+  'Reverse Crunch': '리버스 크런치',
+  'Reverse Plank': '리버스 플랭크',
+  'Romanian Deadlift': '루마니안 데드리프트',
+  'Seated Cable Row': '시티드 케이블 로우',
+  'Seated Calf Raise': '시티드 카프 레이즈',
+  'Seated Good Morning': '시티드 굿모닝',
+  'Seated Leg Curl': '시티드 레그 컬',
+  'Side Band': '사이드 밴드',
+  'Sissy Squat': '시시 스쿼트',
+  'Sit Up': '싯업',
+  'Smith Machine Squat': '스미스 머신 스쿼트',
+  'Squat Machine': '스쿼트 머신',
+  'Standing Calf Raise': '스탠딩 카프 레이즈',
+  'Suit Case Carry': '수트케이스 캐리',
+  'T-Bar Row': '티바 로우',
+  'Upright Row': '업라이트 로우',
+};
+
+/** 대소문자, 띄어쓰기, 하이픈, Dumbell/Dumbbell 차이를 없앤 비교용 글자 */
+const norm = (name: string) => name.toLowerCase().replace(/dumbbell/g, 'dumbell').replace(/[^a-z0-9]/g, '');
+const BY_NORM = new Map(Object.entries(KO).map(([en, ko]) => [norm(en), ko]));
+
+export function koName(name: string): string | null {
+  return BY_NORM.get(norm(name)) ?? null;
+}
+
+/** "Dips (딥스)". 한글 이름을 모르면 영어 이름 그대로 */
+export function withKo(name: string): string {
+  const ko = koName(name);
+  return ko ? `${name} (${ko})` : name;
+}

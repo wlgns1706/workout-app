@@ -1,3 +1,4 @@
+import { withKo } from '../../domain/exerciseKo';
 import { useEffect, useState } from 'react';
 import type { SetType, Unit } from '../../domain/types';
 import { formatKg, parseNumber, toKg, weightSteps } from '../../domain/units';
@@ -120,7 +121,7 @@ export function AltSheet({ original, options, current, legacy, onPick, onClose }
       <div className="altlist">
         {all.map((n) => (
           <button key={n} type="button" aria-pressed={n === current} onClick={() => onPick(n)}>
-            {n}
+            {withKo(n)}
             {n === original && <small className="muted"> · 프로그램 종목</small>}
           </button>
         ))}

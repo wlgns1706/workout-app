@@ -164,7 +164,7 @@ export default function HomePage() {
         <Item done={weights.has(today)}>
           <strong>체중</strong>{' '}
           {weights.has(today) ? (
-            <span className="muted">{weights.get(today)!.toFixed(1)}kg</span>
+            <><span className="muted">{weights.get(today)!.toFixed(1)}kg</span> <Link to="/body">컨디션도 적기 →</Link></>
           ) : (
             <span className="row" style={{ marginTop: 4 }}>
               <input type="text" inputMode="decimal" aria-label="오늘 체중" placeholder="kg" value={weightText} onChange={(e) => setWeightText(e.target.value)} style={{ width: 90 }} />

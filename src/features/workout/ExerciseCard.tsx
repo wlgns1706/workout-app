@@ -4,6 +4,7 @@ import { db } from '../../db/db';
 import { defaultSetting, deleteSetLog, exerciseHistory, patchDayLog, patchSetting, saveSetLog } from '../../db/repo';
 import { bestE1RM, formatSet, isPR, lastSession, prefill, type DayKey, type Prefill } from '../../domain/e1rm';
 import { autofillPatch, dayLogId, exerciseDone, exerciseNameFor, newSetLog, nextSetType, slotsForExercise } from '../../domain/progress';
+import { koName } from '../../domain/exerciseKo';
 import { prescriptionText, repsText } from '../../domain/labels';
 import { defaultReps } from '../../domain/reps';
 import type { Plan, Program, ProgramExercise, SetLog, Unit } from '../../domain/types';
@@ -137,6 +138,7 @@ export function ExerciseCard(props: Props) {
       {finished && '✓ '}{name}
       {name !== exercise.name && <small className="muted"> (원래 {exercise.name})</small>}
       {exercise.alternatives?.length ? <span className="swap"> ⇄</span> : null}
+      {koName(name) && <span className="exko">{koName(name)}</span>}
     </button>
   );
   const altSheet = sheet?.kind === 'alt' && (

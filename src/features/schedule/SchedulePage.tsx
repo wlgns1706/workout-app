@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { todayStr } from '../../domain/date';
 import { positionOn, totalWeeks, weekInfo } from '../../domain/schedule';
 import { WeekDays } from '../today/WeekDays';
@@ -21,7 +22,10 @@ export default function SchedulePage() {
 
   return (
     <main className="page">
-      <h1>일정</h1>
+      <div className="row between">
+        <h1>일정</h1>
+        <Link className="btn small" to="/workout">닫기</Link>
+      </div>
       <p className="muted">{program.name} · {plan.startDate} 시작</p>
       {weeks.map((w) => (
         <div key={w.planWeek} className="card" style={w.planWeek === currentWeek ? { borderColor: 'var(--accent)' } : undefined}>

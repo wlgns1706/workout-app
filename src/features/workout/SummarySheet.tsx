@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/db';
+import { koName } from '../../domain/exerciseKo';
 import { workoutSummary } from '../../domain/summary';
 import type { DayLog, Plan, RpeChart } from '../../domain/types';
 import { BackupButton, backupAgeText, useBackupStatus } from '../../ui/backup';
@@ -56,7 +57,7 @@ export function SummarySheet({ chart, plan, planWeek, dayNo, dayLog, plannedSets
       {s.prs.length > 0 && (
         <>
           <h4>새 PR</h4>
-          <p className="row">{s.prs.map((n) => <span key={n} className="chip pr">{n}</span>)}</p>
+          <p className="row">{s.prs.map((n) => <span key={n} className="chip pr">{koName(n) ?? n}</span>)}</p>
         </>
       )}
       {s.improved.length > 0 ? (
@@ -65,7 +66,7 @@ export function SummarySheet({ chart, plan, planWeek, dayNo, dayLog, plannedSets
           <ul className="sumlist">
             {s.improved.map((i) => (
               <li key={i.name}>
-                {i.name} <span className="muted">{i.before.toFixed(1)} →</span> <strong>{i.after.toFixed(1)}kg</strong>
+                {koName(i.name) ?? i.name} <span className="muted">{i.before.toFixed(1)} →</span> <strong>{i.after.toFixed(1)}kg</strong>
               </li>
             ))}
           </ul>

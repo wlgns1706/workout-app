@@ -4,6 +4,7 @@ import { db } from '../../db/db';
 import { weekLogs } from '../../db/repo';
 import { todayStr } from '../../domain/date';
 import { workoutDates } from '../../domain/home';
+import { koName } from '../../domain/exerciseKo';
 import { weekLabel, weekRpe } from '../../domain/labels';
 import { dayStatus, nextDayNo } from '../../domain/progress';
 import { getWeek, positionOn, totalWeeks } from '../../domain/schedule';
@@ -93,7 +94,7 @@ export default function WorkoutHome() {
                 </Link>
                 {next.exercises.length > 0 && (
                   <p className="muted" style={{ margin: '8px 0 0' }}>
-                    {next.exercises.slice(0, 3).map((e) => e.name).join(', ')}
+                    {next.exercises.slice(0, 3).map((e) => koName(e.name) ?? e.name).join(', ')}
                     {next.exercises.length > 3 && ` 외 ${next.exercises.length - 3}개`}
                   </p>
                 )}

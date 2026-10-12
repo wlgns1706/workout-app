@@ -101,7 +101,10 @@ export default function SettingsPage() {
 
   return (
     <main className="page">
-      <h1>설정</h1>
+      <div className="row between">
+        <h1>설정</h1>
+        <Link className="btn small" to="/">닫기</Link>
+      </div>
       <Link className="btn block" to="/guide" style={{ marginBottom: 12 }}>사용법 보기</Link>
       {message && <div className={message.kind} role="status">{message.text}</div>}
 

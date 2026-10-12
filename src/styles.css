@@ -249,3 +249,8 @@ main a:not([class]) { padding: 11px 0; }
 .timerask { flex: 1 1 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 0.85rem; border-top: 1px solid currentColor; padding-top: 6px; }
 .timerask .row { flex-wrap: nowrap; }
 .timerask .btn { white-space: nowrap; }
+.exko { display: block; font-size: 0.8rem; font-weight: 500; color: var(--muted); letter-spacing: 0; }
+.subhead { font-size: 0.9rem; margin: 12px 0 8px; }
+.scores { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 4px; }
+.scores button { min-height: 44px; border: 0; border-radius: 10px; background: var(--surface-2); font-weight: 700; }
+.scores button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); }
